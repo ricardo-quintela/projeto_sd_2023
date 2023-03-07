@@ -1,0 +1,44 @@
+{
+    "Down": {
+        "pos": [
+            47,
+            122
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [
+            "- fetchers: CopyOnWriteArrayList<Fetcher>",
+            "-numFetchers: int"
+        ],
+        "methods": [
+            "+main(String[])",
+            "-parseNumThreads(String): int"
+        ],
+        "parent": null
+    },
+    "Fetcher": {
+        "pos": [
+            552,
+            93
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [
+            "- id: int",
+            "-thread: Thread",
+            "-state: boolean"
+        ],
+        "methods": [
+            "+ run()",
+            "+ toString(): String",
+            "+printState()"
+        ],
+        "parent": null
+    }
+}
