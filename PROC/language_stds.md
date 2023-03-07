@@ -9,6 +9,7 @@
 
 - Funções
 - Variáveis
+- Packages
 
 ## Pascal case
 
