@@ -19,3 +19,10 @@ projeto_sd_2023
     └── docs
 ```
 
+# Requisitos
+
+- [Jsoup](https://jsoup.org/)
+
+## Instalar Jsoup Ubuntu
+
+`sudo apt install libjsoup-java`  
