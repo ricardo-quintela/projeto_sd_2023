@@ -1,8 +1,54 @@
 {
-    "Down": {
+    "Crawler": {
         "pos": [
-            47,
-            122
+            46,
+            216
+        ],
+        "color": [
+            255,
+            132,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+main(String[])"
+        ],
+        "parent": "ThreadHandler"
+    },
+    "BarrelHandler": {
+        "pos": [
+            194,
+            425
+        ],
+        "color": [
+            0,
+            255,
+            15
+        ],
+        "attributes": [],
+        "methods": [
+            "+main(String[])"
+        ],
+        "parent": "ThreadHandler"
+    },
+    "Barrel": {
+        "pos": [
+            595,
+            356
+        ],
+        "color": [
+            0,
+            123,
+            255
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": "ThreadSlave"
+    },
+    "ThreadSlave": {
+        "pos": [
+            566,
+            37
         ],
         "color": [
             0,
@@ -10,35 +56,47 @@
             0
         ],
         "attributes": [
-            "- fetchers: CopyOnWriteArrayList<Fetcher>",
-            "-numFetchers: int"
+            "#id: int",
+            "#state: boolean",
+            "#thread: Thread",
+            "#parentName: String"
         ],
         "methods": [
-            "+main(String[])",
+            "+printState()",
+            "+run()"
+        ],
+        "parent": null
+    },
+    "ThreadHandler": {
+        "pos": [
+            62,
+            37
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [
+            "#threads: CopyOnWriteArrayList<ThreadSlave>"
+        ],
+        "methods": [
             "-parseNumThreads(String): int"
         ],
         "parent": null
     },
-    "Fetcher": {
+    "Downloader": {
         "pos": [
-            552,
-            93
+            782,
+            69
         ],
         "color": [
+            102,
             0,
-            0,
-            0
+            255
         ],
-        "attributes": [
-            "- id: int",
-            "-thread: Thread",
-            "-state: boolean"
-        ],
-        "methods": [
-            "+ run()",
-            "+ toString(): String",
-            "+printState()"
-        ],
-        "parent": null
+        "attributes": [],
+        "methods": [],
+        "parent": "ThreadSlave"
     }
 }
