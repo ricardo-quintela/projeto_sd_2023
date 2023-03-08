@@ -31,3 +31,6 @@ jsoup-*.jar
 
 # vscode
 .vscode/
+
+# sources
+sources.txt
