@@ -7,6 +7,8 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Scanner;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import searchEngine.ThreadSlave;
 
@@ -18,7 +20,7 @@ import searchEngine.ThreadSlave;
  * 
  * Os links são adicionados à fila por um {@code Barrel}
  */
-public class Barrel extends ThreadSlave implements Serializable, Remote{
+public class Barrel extends ThreadSlave implements Serializable, Remote, SearchRequest{
 
     private String rmiEndpoint;
 
@@ -40,6 +42,15 @@ public class Barrel extends ThreadSlave implements Serializable, Remote{
      */
     public Barrel() {}
 
+
+
+    @Override
+    public String search(CopyOnWriteArrayList<String> query) throws RemoteException {
+        return query.get(0);
+    }
+
+
+
     @Override
     public void run() {
         
@@ -51,6 +62,14 @@ public class Barrel extends ThreadSlave implements Serializable, Remote{
             this.setState(server.subscribe(this));
 
             printState();
+
+
+            Scanner sc = new Scanner(System.in);
+
+            sc.nextLine();
+
+            sc.close();
+
 
             // fim
             System.out.println(this + " terminated!");

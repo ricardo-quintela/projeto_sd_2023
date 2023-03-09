@@ -6,8 +6,13 @@ import java.rmi.AccessException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Scanner;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.management.Query;
 
 import searchEngine.barrel.Register;
+import searchEngine.barrel.SearchRequest;
 
 public class SearchModule {
 
@@ -26,6 +31,29 @@ public class SearchModule {
 
             // tentar ligar ao RMI
             Register server = (Register) Naming.lookup(rmiEndpoint);
+
+            SearchRequest barrel = server.getBarrel();
+
+            CopyOnWriteArrayList<String> query = new CopyOnWriteArrayList<String>();
+
+            Scanner sc = new Scanner(System.in);
+
+            String string;
+
+            while (true){
+                query.clear();
+
+                string = sc.nextLine();
+
+                if (string.equals("exit")) break;
+
+                query.add(string);
+                
+                System.out.print(barrel + " " + barrel.search(query));
+            }
+
+            sc.close();
+
 
 
         } catch (NotBoundException e) {

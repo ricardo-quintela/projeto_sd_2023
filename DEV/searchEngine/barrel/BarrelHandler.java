@@ -7,6 +7,7 @@ import java.rmi.registry.LocateRegistry;
 
 import searchEngine.ThreadHandler;
 import searchEngine.ThreadSlave;
+import searchEngine.search.SearchResponse;
 
 
 public class BarrelHandler extends ThreadHandler implements Register, Serializable {
@@ -20,7 +21,9 @@ public class BarrelHandler extends ThreadHandler implements Register, Serializab
 
     @Override
     public boolean subscribe(Barrel barrel) throws RemoteException {
-        return this.threads.add(barrel);
+        this.threads.add(barrel);
+        System.out.println(this.threads.size());
+        return true;
     }
 
     @Override
@@ -32,6 +35,19 @@ public class BarrelHandler extends ThreadHandler implements Register, Serializab
             }
         }
         return false;
+    }
+
+
+    @Override
+    public SearchRequest getBarrel() throws RemoteException {
+        System.out.println(this.threads.size());
+        return (SearchRequest) this.threads.get(this.threads.size() - 1);
+    }
+
+
+    @Override
+    public SearchRequest getBarrel(int id) throws RemoteException {
+        return (SearchRequest) this.threads.get(id);
     }
 
 
