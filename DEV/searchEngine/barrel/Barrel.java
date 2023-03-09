@@ -1,5 +1,13 @@
 package searchEngine.barrel;
 
+import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.rmi.AccessException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
 import searchEngine.ThreadSlave;
 
 
@@ -10,16 +18,21 @@ import searchEngine.ThreadSlave;
  * 
  * Os links são adicionados à fila por um {@code Barrel}
  */
-public class Barrel extends ThreadSlave{
+public class Barrel extends ThreadSlave implements Serializable, Remote{
+
+    private String rmiEndpoint;
 
     /**
      * Construtor da classe {@code Downloader}
      * 
      * @param id o id da thread
      * @param parentName o nome do objeto que criou esta thread
+     * @param rmiEndpoint o endpoint do RMI registry
      */
-    public Barrel(int id, String parentName) {
+    public Barrel(int id, String parentName, String rmiEndpoint) {
         super(id, parentName);
+
+        this.rmiEndpoint = rmiEndpoint;
     }
 
     /**
@@ -29,10 +42,32 @@ public class Barrel extends ThreadSlave{
 
     @Override
     public void run() {
-        printState();
+        
+        try{
+            // tentar ligar ao RMI
+            Register server = (Register) Naming.lookup(this.rmiEndpoint);
 
-        // fim
-        System.out.println(this + " terminated!");
+            // subscrever ao servidor
+            this.setState(server.subscribe(this));
+
+            printState();
+
+            // fim
+            System.out.println(this + " terminated!");
+
+        } catch (NotBoundException e) {
+            System.out.print(this + ": ERRO: RMI nao esta ligado em " + this.rmiEndpoint + "!");
+            return;
+        } catch (MalformedURLException e) {
+            System.out.print(this + ": ERRO: nao foi possivel encontrar o RMI em " + this.rmiEndpoint + "!");
+            return;
+        } catch (AccessException e) {
+            System.out.print(this + ": ERRO: nao e permitido ligar ao endpoint " + this.rmiEndpoint + "!");
+        } catch (RemoteException e){
+            System.out.println(this + ": ERRO: Ocorreu um erro no RMI");
+            e.printStackTrace();
+            return;
+        }
     }
 
 

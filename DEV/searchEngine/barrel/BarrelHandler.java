@@ -1,10 +1,15 @@
 package searchEngine.barrel;
 
+import java.io.Serializable;
+import java.rmi.AlreadyBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+
 import searchEngine.ThreadHandler;
 import searchEngine.ThreadSlave;
 
 
-public class BarrelHandler extends ThreadHandler {
+public class BarrelHandler extends ThreadHandler implements Register, Serializable {
 
     /**
      * Construtor por omissão da classe {@code BarrelHandeler}
@@ -12,42 +17,79 @@ public class BarrelHandler extends ThreadHandler {
     public BarrelHandler() {
     }
 
-    public static void main(String[] args) {
+
+    @Override
+    public boolean subscribe(Barrel barrel) throws RemoteException {
+        return this.threads.add(barrel);
+    }
+
+    @Override
+    public boolean unsubcribe(int id) throws RemoteException {
+        for (int i = 0; i < threads.size(); i++) {
+            if (threads.get(i).getId() == id){
+                this.threads.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public static void main(String[] args) throws RemoteException {
         // tratamento de erros nos parâmetros iniciais
         if (args.length == 0) {
-            System.out.println("ERRO: Deve ser especificado o número de threads Crawler!");
+            System.out.println("ERRO: Deve ser especificado o número de threads Barrel, a porta do registo RMI e o nome do registo!");
             return;
         }
 
-        if (args.length > 1) {
+        if (args.length > 3) {
             System.out.println("ERRO: Parametros a mais!");
             return;
         }
 
         // fazer parse do numero de threads
-        int numThreads = parseNumThreads(args[0]);
+        int numThreads = parsePositiveInt(args[0]);
 
         if (numThreads < 1) {
             System.out.println("ERRO: numero de threads invalido!");
             return;
         }
 
+        int rmi_port = parsePositiveInt(args[1]);
+
+        if (numThreads < 1) {
+            System.out.println("ERRO: numero de porta invalido!");
+            return;
+        }
+
+        String rmiEndpoint = args[2];
+
 
         // criar um objeto Crawler
         BarrelHandler crawler = new BarrelHandler();
 
-        // criar os fetchers
-        for (int i = 0; i < numThreads; i++) {
-            crawler.threads.add(new Barrel(i, "BarrelHandler"));
-        }
-
+        
         try{
+            // criar um registo de RMI e ligar o objeto crawler
+            LocateRegistry.createRegistry(rmi_port).bind(rmiEndpoint, crawler);
+
+
+            // criar os downloaders
+            for (int i = 0; i < numThreads; i++) {
+                new Barrel(i, "BarrelHandler", rmiEndpoint);
+            }
+            
+            
             // esperar pelo término das threads
             for (ThreadSlave downloader : crawler.threads) {
                 downloader.getThread().join();
             }
+        } catch (AlreadyBoundException e){
+            System.out.println("ERRO: Registo já em uso!");
+            return;
+
         } catch(InterruptedException e){
-            System.out.println("Barrel foi interrompido!");
+            System.out.println("ERRO: Barrel foi interrompido!");
         }
     }
     

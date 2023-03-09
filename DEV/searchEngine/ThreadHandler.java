@@ -25,15 +25,15 @@ public class ThreadHandler {
      * @param arg a string que deverá ser um argumento da consola
      * @return o inteiro convertido ou -1 em caso de erro
      */
-    protected static int parseNumThreads(String arg) {
-        int numThreads;
+    protected static int parsePositiveInt(String string) {
+        int number;
 
         try {
-            numThreads = Integer.parseInt(arg);
+            number = Integer.parseInt(string);
         } catch (NumberFormatException e) {
             return -1;
         }
 
-        return numThreads;
+        return number;
     }
 }

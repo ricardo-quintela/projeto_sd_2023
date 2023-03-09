@@ -36,7 +36,7 @@ public class Crawler extends ThreadHandler {
         }
 
         // fazer parse do numero de threads
-        int numThreads = parseNumThreads(args[0]);
+        int numThreads = parsePositiveInt(args[0]);
 
         if (numThreads < 1) {
             System.out.println("ERRO: numero de threads invalido!");
