@@ -1,17 +1,20 @@
 {
-    "<<SearchRequest>>": {
+    "<<Register>>": {
         "pos": [
-            36,
-            519
+            47,
+            383
         ],
         "color": [
             0,
             255,
-            42
+            36
         ],
         "attributes": [],
         "methods": [
-            "+search(CopyOnWriteArrayList<String>): String"
+            "+subscribe(Barrel)",
+            "+unsubscribe(int)",
+            "+getBarrel(): SearchResponse",
+            "+getBarrel(int): SearchResponse"
         ],
         "parent": "BarrelHandler"
     },
@@ -45,10 +48,32 @@
         ],
         "parent": "ThreadHandler"
     },
+    "ThreadSlave": {
+        "pos": [
+            566,
+            37
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [
+            "#id: int",
+            "#state: boolean",
+            "#thread: Thread",
+            "#parentName: String"
+        ],
+        "methods": [
+            "+printState()",
+            "+run()"
+        ],
+        "parent": null
+    },
     "SearchModule": {
         "pos": [
-            234,
-            701
+            577,
+            607
         ],
         "color": [
             255,
@@ -58,23 +83,6 @@
         "attributes": [],
         "methods": [],
         "parent": null
-    },
-    "<<Register>>": {
-        "pos": [
-            47,
-            383
-        ],
-        "color": [
-            0,
-            255,
-            36
-        ],
-        "attributes": [],
-        "methods": [
-            "+subscribe(Barrel)",
-            "+unsubscribe(int)"
-        ],
-        "parent": "BarrelHandler"
     },
     "BarrelHandler": {
         "pos": [
@@ -110,44 +118,6 @@
         ],
         "parent": null
     },
-    "ThreadSlave": {
-        "pos": [
-            566,
-            37
-        ],
-        "color": [
-            0,
-            0,
-            0
-        ],
-        "attributes": [
-            "#id: int",
-            "#state: boolean",
-            "#thread: Thread",
-            "#parentName: String"
-        ],
-        "methods": [
-            "+printState()",
-            "+run()"
-        ],
-        "parent": null
-    },
-    "<<SearchResponse>>": {
-        "pos": [
-            113,
-            787
-        ],
-        "color": [
-            255,
-            18,
-            0
-        ],
-        "attributes": [],
-        "methods": [
-            "+postResponse(String)"
-        ],
-        "parent": "SearchModule"
-    },
     "Barrel": {
         "pos": [
             595,
@@ -163,5 +133,37 @@
         ],
         "methods": [],
         "parent": "ThreadSlave"
+    },
+    "<<SearchResponse>>": {
+        "pos": [
+            391,
+            680
+        ],
+        "color": [
+            255,
+            18,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+postResponse(String)"
+        ],
+        "parent": "SearchModule"
+    },
+    "<<SearchRequest>>": {
+        "pos": [
+            511,
+            487
+        ],
+        "color": [
+            0,
+            135,
+            255
+        ],
+        "attributes": [],
+        "methods": [
+            "+search(CopyOnWriteArrayList<String>): String"
+        ],
+        "parent": "Barrel"
     }
 }
