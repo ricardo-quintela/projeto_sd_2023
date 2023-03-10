@@ -1,0 +1,170 @@
+{
+    "SearchModule": {
+        "pos": [
+            383,
+            643
+        ],
+        "color": [
+            255,
+            6,
+            0
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "Downloader": {
+        "pos": [
+            782,
+            69
+        ],
+        "color": [
+            102,
+            0,
+            255
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": "ThreadSlave"
+    },
+    "ThreadHandler": {
+        "pos": [
+            62,
+            37
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [
+            "#threads: CopyOnWriteArrayList<ThreadSlave>"
+        ],
+        "methods": [
+            "+parsePoritiveInt(String): int"
+        ],
+        "parent": null
+    },
+    "Crawler": {
+        "pos": [
+            46,
+            216
+        ],
+        "color": [
+            255,
+            132,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+main(String[])"
+        ],
+        "parent": "ThreadHandler"
+    },
+    "<<SearchResponse>>": {
+        "pos": [
+            63,
+            630
+        ],
+        "color": [
+            255,
+            18,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+postResponse(String)"
+        ],
+        "parent": "SearchModule"
+    },
+    "ThreadSlave": {
+        "pos": [
+            566,
+            37
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [
+            "#id: int",
+            "#state: boolean",
+            "#thread: Thread",
+            "#parentName: String"
+        ],
+        "methods": [
+            "+printState()",
+            "+run()"
+        ],
+        "parent": null
+    },
+    "<<Register>>": {
+        "pos": [
+            47,
+            383
+        ],
+        "color": [
+            0,
+            255,
+            36
+        ],
+        "attributes": [],
+        "methods": [
+            "+subscribe(String, SearchRequest)",
+            "+unsubscribe(int)",
+            "+getBarrel(int): SearchRequest"
+        ],
+        "parent": "BarrelHandler"
+    },
+    "<<SearchRequest>>": {
+        "pos": [
+            511,
+            487
+        ],
+        "color": [
+            0,
+            135,
+            255
+        ],
+        "attributes": [],
+        "methods": [
+            "+search(CopyOnWriteArrayList<String>): String"
+        ],
+        "parent": "Barrel"
+    },
+    "BarrelHandler": {
+        "pos": [
+            235,
+            225
+        ],
+        "color": [
+            0,
+            255,
+            15
+        ],
+        "attributes": [
+            "-barrelInterfaces: SearchRequest"
+        ],
+        "methods": [
+            "+main(String[])"
+        ],
+        "parent": "ThreadHandler"
+    },
+    "Barrel": {
+        "pos": [
+            595,
+            356
+        ],
+        "color": [
+            0,
+            123,
+            255
+        ],
+        "attributes": [
+            "-rmiEndpoint: String"
+        ],
+        "methods": [],
+        "parent": "ThreadSlave"
+    }
+}

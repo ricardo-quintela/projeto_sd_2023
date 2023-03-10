@@ -2,7 +2,7 @@ package searchEngine.barrel;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.ArrayList;
 
 public interface SearchRequest extends Remote{
     
@@ -15,6 +15,6 @@ public interface SearchRequest extends Remote{
      * @return o conjunto de links em que as palavras aparecem
      * @throws RemoteException se ocorrer um erro do lado do server
      */
-    public String search(CopyOnWriteArrayList<String> query) throws RemoteException;
+    public String search(ArrayList<String> query) throws RemoteException;
 
 }

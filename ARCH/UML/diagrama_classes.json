@@ -1,0 +1,99 @@
+{
+    "<<SearchRequest>>": {
+        "pos": [
+            63,
+            385
+        ],
+        "color": [
+            0,
+            135,
+            255
+        ],
+        "attributes": [],
+        "methods": [
+            "+search(ArrayList<String>)"
+        ],
+        "parent": "Barrel"
+    },
+    "Barrel": {
+        "pos": [
+            44,
+            64
+        ],
+        "color": [
+            0,
+            123,
+            255
+        ],
+        "attributes": [
+            "-rmiPort: int",
+            "-rmiEndpoint: String"
+        ],
+        "methods": [
+            "+register(int, String, Barrel): boolean",
+            "+main(String[])",
+            "-printUsage()"
+        ],
+        "parent": null
+    },
+    "Downloader": {
+        "pos": [
+            439,
+            189
+        ],
+        "color": [
+            102,
+            0,
+            255
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "Crawler": {
+        "pos": [
+            443,
+            56
+        ],
+        "color": [
+            255,
+            132,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+main(String[])"
+        ],
+        "parent": null
+    },
+    "<<SearchResponse>>": {
+        "pos": [
+            22,
+            517
+        ],
+        "color": [
+            255,
+            18,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+postResults(): ArrayList<String>"
+        ],
+        "parent": "SearchModule"
+    },
+    "SearchModule": {
+        "pos": [
+            405,
+            531
+        ],
+        "color": [
+            255,
+            6,
+            0
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    }
+}
