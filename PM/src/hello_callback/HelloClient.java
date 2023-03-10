@@ -3,8 +3,6 @@ package hello_callback;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.Scanner;
-import java.net.*;
-import java.io.*;
 
 public class HelloClient extends UnicastRemoteObject implements Hello_C_I {
 
@@ -13,7 +11,7 @@ public class HelloClient extends UnicastRemoteObject implements Hello_C_I {
 	}
 
 	public void print_on_client(String s) throws RemoteException {
-		System.out.println("> " + s);
+		System.out.println("client > " + s);
 	}
 
 	public static void main(String args[]) {
@@ -25,23 +23,28 @@ public class HelloClient extends UnicastRemoteObject implements Hello_C_I {
 		*/
  
 		try (Scanner sc = new Scanner(System.in)) {
+
 			//User user = new User();
 			Hello_S_I h = (Hello_S_I) Naming.lookup("XPTO");
 			HelloClient c = new HelloClient();
-
+	
 			h.subscribe(args[0], (Hello_C_I) c);
 			System.out.println("Client sent subscription to server");
-
+	
+	
+			Hello_C_I i;
 
 			while (true) {
 				System.out.print("> ");
 				a = sc.nextLine();
-				h.print_on_server(a);
-			}
+				i = h.print_on_server(a);
 
-		} catch (Exception e) {
-			System.out.println("Exception in main: " + e);
+				i.print_on_client("HELLO MAN");
+			}
+		} catch (Exception e){
+			e.printStackTrace();
 		}
+
 
 	}
 
