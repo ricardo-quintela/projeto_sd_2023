@@ -16,11 +16,13 @@ public interface Register extends Remote {
     
     /**
      * Permite que o {@code Barrel} subscreva ao servidor {@code BarrelHandler}
-     * @param barrel o storage {@code Barrel} que vai subscrever
+     * através da sua interface
+     * @param name o nome do barrel que vai subscrever
+     * @param barrel a interface do storage barrel que vai subscrever
      * @return true caso consiga subscrever; false caso caontrario
      * @throws RemoteException caso ocorra um erro no RMI
      */
-    public boolean subscribe(Barrel barrel) throws RemoteException;
+    public boolean subscribe(String name, SearchRequest barrel) throws RemoteException;
     
     /**
      * Permite que o {@code Barrel} cancele a subscrição ao servidor {@code BarrelHandler}
@@ -29,14 +31,6 @@ public interface Register extends Remote {
      * @throws RemoteException caso ocorra um erro no RMI
      */
     public boolean unsubcribe(int id) throws RemoteException;
-
-    /**
-     * Retorna a interface do {@code Barrel} no maior índice
-     * @return o Barrel no maior índice
-     * @throws RemoteException caso ocorra um erro no RMI
-     */
-    public SearchRequest getBarrel() throws RemoteException;
-
 
     /**
      * Retorna a interface do {@code Barrel} no índice fornecido

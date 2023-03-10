@@ -4,50 +4,42 @@ import java.io.Serializable;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import searchEngine.ThreadHandler;
 import searchEngine.ThreadSlave;
-import searchEngine.search.SearchResponse;
 
 
 public class BarrelHandler extends ThreadHandler implements Register, Serializable {
+
+    private CopyOnWriteArrayList<SearchRequest> barrelInterfaces;
+
 
     /**
      * Construtor por omissão da classe {@code BarrelHandeler}
      */
     public BarrelHandler() {
+        this.barrelInterfaces = new CopyOnWriteArrayList<>();
     }
 
 
     @Override
-    public boolean subscribe(Barrel barrel) throws RemoteException {
-        this.threads.add(barrel);
-        System.out.println(this.threads.size());
+    public boolean subscribe(String name, SearchRequest barrel) throws RemoteException {
+        this.barrelInterfaces.add(barrel);
+        System.out.println(name + " subscribed; " + this.barrelInterfaces.size() + " interfaces in total");
         return true;
     }
 
     @Override
     public boolean unsubcribe(int id) throws RemoteException {
-        for (int i = 0; i < threads.size(); i++) {
-            if (threads.get(i).getId() == id){
-                this.threads.remove(i);
-                return true;
-            }
-        }
+        // TODO: implement unsubscribe
         return false;
     }
 
 
     @Override
-    public SearchRequest getBarrel() throws RemoteException {
-        System.out.println(this.threads.size());
-        return (SearchRequest) this.threads.get(this.threads.size() - 1);
-    }
-
-
-    @Override
     public SearchRequest getBarrel(int id) throws RemoteException {
-        return (SearchRequest) this.threads.get(id);
+        return (SearchRequest) this.barrelInterfaces.get(id);
     }
 
 
@@ -81,24 +73,24 @@ public class BarrelHandler extends ThreadHandler implements Register, Serializab
         String rmiEndpoint = args[2];
 
 
-        // criar um objeto Crawler
-        BarrelHandler crawler = new BarrelHandler();
+        // criar um objeto BarrelHandler
+        BarrelHandler barrelHandler = new BarrelHandler();
 
         
         try{
             // criar um registo de RMI e ligar o objeto crawler
-            LocateRegistry.createRegistry(rmi_port).bind(rmiEndpoint, crawler);
+            LocateRegistry.createRegistry(rmi_port).bind(rmiEndpoint, barrelHandler);
 
 
-            // criar os downloaders
+            // criar os storage barrels e adicioná-los à lista
             for (int i = 0; i < numThreads; i++) {
-                new Barrel(i, "BarrelHandler", rmiEndpoint);
+                barrelHandler.threads.add(new Barrel(i, "BarrelHandler", rmiEndpoint));
             }
             
             
             // esperar pelo término das threads
-            for (ThreadSlave downloader : crawler.threads) {
-                downloader.getThread().join();
+            for (ThreadSlave barrel : barrelHandler.threads) {
+                barrel.getThread().join();
             }
         } catch (AlreadyBoundException e){
             System.out.println("ERRO: Registo já em uso!");

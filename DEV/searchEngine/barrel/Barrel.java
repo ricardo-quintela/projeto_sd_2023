@@ -5,7 +5,6 @@ import java.net.MalformedURLException;
 import java.rmi.AccessException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -20,7 +19,7 @@ import searchEngine.ThreadSlave;
  * 
  * Os links são adicionados à fila por um {@code Barrel}
  */
-public class Barrel extends ThreadSlave implements Serializable, Remote, SearchRequest{
+public class Barrel extends ThreadSlave implements Serializable, SearchRequest{
 
     private String rmiEndpoint;
 
@@ -46,7 +45,7 @@ public class Barrel extends ThreadSlave implements Serializable, Remote, SearchR
 
     @Override
     public String search(CopyOnWriteArrayList<String> query) throws RemoteException {
-        return query.get(0);
+        return this.toString() + ": " + query.get(0);
     }
 
 
@@ -59,7 +58,7 @@ public class Barrel extends ThreadSlave implements Serializable, Remote, SearchR
             Register server = (Register) Naming.lookup(this.rmiEndpoint);
 
             // subscrever ao servidor
-            this.setState(server.subscribe(this));
+            this.setState(server.subscribe(this.toString(), (SearchRequest) this));
 
             printState();
 

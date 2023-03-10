@@ -5,16 +5,15 @@ import java.net.MalformedURLException;
 import java.rmi.AccessException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.management.Query;
-
 import searchEngine.barrel.Register;
 import searchEngine.barrel.SearchRequest;
 
-public class SearchModule {
+public class SearchModule implements Serializable, Remote {
 
 
     public static void main(String[] args) {
@@ -27,32 +26,31 @@ public class SearchModule {
 
         String rmiEndpoint = args[0];
         
-        try{
+        try (Scanner sc = new Scanner(System.in)){
 
             // tentar ligar ao RMI
             Register server = (Register) Naming.lookup(rmiEndpoint);
 
-            SearchRequest barrel = server.getBarrel();
-
             CopyOnWriteArrayList<String> query = new CopyOnWriteArrayList<String>();
-
-            Scanner sc = new Scanner(System.in);
-
+            
             String string;
+            SearchRequest barrel;
+
+
+            barrel = server.getBarrel(0);
 
             while (true){
                 query.clear();
 
                 string = sc.nextLine();
-
                 if (string.equals("exit")) break;
-
+                
+                
+                System.out.print("Sending to server: " + string);
                 query.add(string);
                 
                 System.out.print(barrel + " " + barrel.search(query));
             }
-
-            sc.close();
 
 
 
