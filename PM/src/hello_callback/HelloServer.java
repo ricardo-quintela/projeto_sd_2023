@@ -1,6 +1,7 @@
 package hello_callback;
 
 import java.rmi.*;
+import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.*;
 import java.util.Scanner;
@@ -43,7 +44,11 @@ public class HelloServer extends UnicastRemoteObject implements Hello_S_I {
 
 			//User user = new User();
 			HelloServer h = new HelloServer();
-			LocateRegistry.createRegistry(1099).rebind("XPTO", h);
+			Registry r = LocateRegistry.createRegistry(1099);
+
+			System.out.println(r);
+
+			r.bind("XPTO", h);
 			System.out.println("Hello Server ready.");
 			while (true) {
 	
@@ -52,6 +57,7 @@ public class HelloServer extends UnicastRemoteObject implements Hello_S_I {
 				
 				for (Hello_C_I client : h.client) {
 					client.print_on_client(a);
+					
 				}
 	
 				
