@@ -1,19 +1,17 @@
 {
-    "<<SearchRequest>>": {
+    "SearchModule": {
         "pos": [
-            63,
-            385
+            527,
+            538
         ],
         "color": [
-            0,
-            135,
-            255
+            255,
+            6,
+            0
         ],
         "attributes": [],
-        "methods": [
-            "+search(ArrayList<String>)"
-        ],
-        "parent": "Barrel"
+        "methods": [],
+        "parent": null
     },
     "Barrel": {
         "pos": [
@@ -36,6 +34,22 @@
         ],
         "parent": null
     },
+    "<<SearchRequest>>": {
+        "pos": [
+            22,
+            517
+        ],
+        "color": [
+            255,
+            18,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+searh(ArrayList<String>): ArrayList<String>"
+        ],
+        "parent": "SearchModule"
+    },
     "Downloader": {
         "pos": [
             439,
@@ -49,6 +63,22 @@
         "attributes": [],
         "methods": [],
         "parent": null
+    },
+    "<<QueryIf>>": {
+        "pos": [
+            63,
+            385
+        ],
+        "color": [
+            0,
+            135,
+            255
+        ],
+        "attributes": [],
+        "methods": [
+            "+execQuery(ArrayList<String>): ArrayList<String>"
+        ],
+        "parent": "Barrel"
     },
     "Crawler": {
         "pos": [
@@ -66,34 +96,22 @@
         ],
         "parent": null
     },
-    "<<SearchResponse>>": {
+    "Client": {
         "pos": [
-            22,
-            517
+            263,
+            665
         ],
         "color": [
+            0,
             255,
-            18,
-            0
+            15
         ],
-        "attributes": [],
+        "attributes": [
+            "-name: String"
+        ],
         "methods": [
-            "+postResults(): ArrayList<String>"
+            "+main(String[])"
         ],
-        "parent": "SearchModule"
-    },
-    "SearchModule": {
-        "pos": [
-            405,
-            531
-        ],
-        "color": [
-            255,
-            6,
-            0
-        ],
-        "attributes": [],
-        "methods": [],
         "parent": null
     }
 }
