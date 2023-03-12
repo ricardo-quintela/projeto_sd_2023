@@ -7,7 +7,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Scanner;
-import searchEngine.barrel.SearchRequest;
+
+import searchEngine.barrel.QueryIf;
 
 public class SearchModule {
 
@@ -38,13 +39,13 @@ public class SearchModule {
         try (Scanner sc = new Scanner(System.in)) {
 
             // ligar ao server registado no rmiEndpoint fornecido
-            SearchRequest barrel = (SearchRequest) Naming.lookup(rmiEndpoint);
+            QueryIf barrel = (QueryIf) Naming.lookup(rmiEndpoint);
 
             ArrayList<String> query = new ArrayList<>();
 
             query.add("Ola");
 
-            System.out.println(barrel.search(query));
+            System.out.println(barrel.execQuery(query));
 
             
         } catch (NotBoundException e) {

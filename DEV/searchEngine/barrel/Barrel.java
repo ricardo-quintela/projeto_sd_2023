@@ -7,7 +7,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
-public class Barrel extends UnicastRemoteObject implements SearchRequest {
+public class Barrel extends UnicastRemoteObject implements QueryIf {
 
     private int rmiPort;
     private String rmiEndpoint;
@@ -27,7 +27,7 @@ public class Barrel extends UnicastRemoteObject implements SearchRequest {
     }
 
     @Override
-    public String search(ArrayList<String> query) throws RemoteException {
+    public String execQuery(ArrayList<String> query) throws RemoteException {
         return this + ": QUERY RECEBIDA";
     }
 
