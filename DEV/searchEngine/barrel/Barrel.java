@@ -28,7 +28,13 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
 
     @Override
     public String execQuery(ArrayList<String> query) throws RemoteException {
-        return this + ": QUERY RECEBIDA";
+        String string = "";
+
+        for (String word : query) {
+            string += word + " ";
+        }
+
+        return this + ": " + string;
     }
 
 
