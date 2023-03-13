@@ -115,7 +115,8 @@
             "-rmiPort: int"
         ],
         "methods": [
-            "+loadConfig(String): boolean"
+            "+loadConfig(String): boolean",
+            "+printUsage()"
         ],
         "parent": null
     }
