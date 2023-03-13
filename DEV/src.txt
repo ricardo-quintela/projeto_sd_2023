@@ -1,0 +1,6 @@
+./fileWorker/TextFileWorker.java
+./searchEngine/barrel/Barrel.java
+./searchEngine/barrel/QueryIf.java
+./searchEngine/client/Client.java
+./searchEngine/search/SearchModule.java
+./searchEngine/search/SearchResponse.java
