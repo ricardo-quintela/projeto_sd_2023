@@ -1,20 +1,4 @@
 {
-    "<<SearchRequest>>": {
-        "pos": [
-            63,
-            385
-        ],
-        "color": [
-            0,
-            135,
-            255
-        ],
-        "attributes": [],
-        "methods": [
-            "+search(ArrayList<String>)"
-        ],
-        "parent": "Barrel"
-    },
     "Barrel": {
         "pos": [
             44,
@@ -35,6 +19,40 @@
             "-printUsage()"
         ],
         "parent": null
+    },
+    "Client": {
+        "pos": [
+            263,
+            665
+        ],
+        "color": [
+            0,
+            255,
+            15
+        ],
+        "attributes": [
+            "-name: String"
+        ],
+        "methods": [
+            "+main(String[])"
+        ],
+        "parent": null
+    },
+    "<<QueryIf>>": {
+        "pos": [
+            63,
+            385
+        ],
+        "color": [
+            0,
+            135,
+            255
+        ],
+        "attributes": [],
+        "methods": [
+            "+execQuery(ArrayList<String>): ArrayList<String>"
+        ],
+        "parent": "Barrel"
     },
     "Downloader": {
         "pos": [
@@ -66,7 +84,7 @@
         ],
         "parent": null
     },
-    "<<SearchResponse>>": {
+    "<<SearchRequest>>": {
         "pos": [
             22,
             517
@@ -78,22 +96,28 @@
         ],
         "attributes": [],
         "methods": [
-            "+postResults(): ArrayList<String>"
+            "+searh(ArrayList<String>): ArrayList<String>"
         ],
         "parent": "SearchModule"
     },
     "SearchModule": {
         "pos": [
-            405,
-            531
+            527,
+            500
         ],
         "color": [
             255,
             6,
             0
         ],
-        "attributes": [],
-        "methods": [],
+        "attributes": [
+            "-barrels: ArrayList<String>",
+            "-rmiPort: int"
+        ],
+        "methods": [
+            "+loadConfig(String): boolean",
+            "+printUsage()"
+        ],
         "parent": null
     }
 }
