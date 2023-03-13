@@ -1,18 +1,4 @@
 {
-    "SearchModule": {
-        "pos": [
-            527,
-            538
-        ],
-        "color": [
-            255,
-            6,
-            0
-        ],
-        "attributes": [],
-        "methods": [],
-        "parent": null
-    },
     "Barrel": {
         "pos": [
             44,
@@ -34,34 +20,22 @@
         ],
         "parent": null
     },
-    "<<SearchRequest>>": {
+    "Client": {
         "pos": [
-            22,
-            517
+            263,
+            665
         ],
         "color": [
-            255,
-            18,
-            0
-        ],
-        "attributes": [],
-        "methods": [
-            "+searh(ArrayList<String>): ArrayList<String>"
-        ],
-        "parent": "SearchModule"
-    },
-    "Downloader": {
-        "pos": [
-            439,
-            189
-        ],
-        "color": [
-            102,
             0,
-            255
+            255,
+            15
         ],
-        "attributes": [],
-        "methods": [],
+        "attributes": [
+            "-name: String"
+        ],
+        "methods": [
+            "+main(String[])"
+        ],
         "parent": null
     },
     "<<QueryIf>>": {
@@ -80,6 +54,20 @@
         ],
         "parent": "Barrel"
     },
+    "Downloader": {
+        "pos": [
+            439,
+            189
+        ],
+        "color": [
+            102,
+            0,
+            255
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
     "Crawler": {
         "pos": [
             443,
@@ -96,21 +84,38 @@
         ],
         "parent": null
     },
-    "Client": {
+    "<<SearchRequest>>": {
         "pos": [
-            263,
-            665
+            22,
+            517
         ],
         "color": [
-            0,
             255,
-            15
+            18,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+searh(ArrayList<String>): ArrayList<String>"
+        ],
+        "parent": "SearchModule"
+    },
+    "SearchModule": {
+        "pos": [
+            527,
+            500
+        ],
+        "color": [
+            255,
+            6,
+            0
         ],
         "attributes": [
-            "-name: String"
+            "-barrels: ArrayList<String>",
+            "-rmiPort: int"
         ],
         "methods": [
-            "+main(String[])"
+            "+loadConfig(String)"
         ],
         "parent": null
     }
