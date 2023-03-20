@@ -1,31 +1,37 @@
-package searchEngine.search;
+package search;
 
 import java.net.MalformedURLException;
 import java.rmi.AccessException;
 import java.rmi.Naming;
+import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
+import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
-import searchEngine.barrel.QueryIf;
-import searchEngine.fileWorker.TextFileWorker;
+import barrel.QueryIf;
+import fileWorker.TextFileWorker;
+import utils.TratamentoStrings;
 
-/**
- * Um {@code SearchModule} recebe pedidos RMI de um cliente e realiza
- * pedidos a {@code Barrels} com endpoints fornecidos num ficheiro de configuração
- */
-public class SearchModule {
+public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
+    /**
+     * Um {@code SearchModule} recebe pedidos RMI de um cliente e realiza
+     * pedidos a {@code Barrels} com endpoints fornecidos num ficheiro de configuração
+     */
     private ArrayList<String> barrels;
     private int rmiPort;
 
-
+    
     /**
      * Construtor por omissão da classe SearchModule
      */
-    public SearchModule(){}
+    public SearchModule() throws RemoteException{}
+    
 
     /**
      * Carrega a configuração a partir de um ficheiro
@@ -56,11 +62,94 @@ public class SearchModule {
     }
 
 
+
+
+    public void menu(){
+
+        Scanner sc = new Scanner(System.in);
+        int loop = 1;
+        while (loop == 1){
+
+            System.out.println("Google da wish\nDigite a opcao desejada:\n1 - url\n2 - palavra\n3 - sair\nDigite: ");
+
+            try{
+                
+                int num = sc.nextInt();
+
+                switch(num){
+                    case 1:
+                        System.out.println("URL\n");
+                        break;
+                    case 2:
+                        System.out.println("Palavra\n");
+                        break;
+                    case 3:
+                        loop = 0;
+                        break;
+                }
+            } 
+            catch (Exception e){
+                System.out.println("Digite um valor permitido");
+            }
+
+        }
+        sc.close();
+    }
+
+    /**
+     * Tenta criar o registo RMI
+     * <p>
+     * Caso o registo já exista regista uma instância de {@code Barrel} no mesmo
+     * 
+     * @param port     o porto do registo
+     * @param endpoint o endpoint em que a instância de {@code Barrel} vai ser
+     *                 registada
+     * @param barrel   o {@code Barrel} que se quer ligar
+     */
+    public static boolean register(int port, String endpoint, SearchModule searchModule) {
+        Registry registry;
+
+        // tentar criar o registo
+        try {
+            registry = LocateRegistry.createRegistry(port);
+            System.out.println("Registo criado em 'localhost:" + port);
+        } catch (RemoteException re) {
+            
+            // caso não seja possível criar uma referência para o registo tentar localiza-lo
+            try {
+                registry = LocateRegistry.getRegistry(port);
+            } catch (RemoteException e) {
+
+                System.out.println("Erro: Nao foi possivel criar o registo em 'localhost:" + port + "/" + endpoint + "'");
+                return false;
+            }
+        }
+
+        // tentar registar o Barrel no endpoint atribuido
+        try {
+            registry.bind(endpoint, searchModule);
+            System.out.println("SearchModule registado em 'localhost:" + port + "/" + endpoint + "'");
+
+        } catch (AlreadyBoundException e) {
+            System.out.println("Erro: 'localhost:" + port + "/" + endpoint + "' ja foi atribuido!");
+
+        } catch (RemoteException e) {
+            System.out.println("Erro: Ocorreu um erro a registar o Barrel em 'localhost:" + port + "/" + endpoint + "'");
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Imprime no {@code stdin} o modo de uso do programa
      */
     private static void printUsage() {
-        System.out.println("Modo de uso:\nsearch {path}\n- path: Caminho do ficheiro de configuracao");
+        System.out.println("Modo de uso:\nporta do searchModule {port}\nsearch {server_endpoint}\nbarrel {barrel_endpoint}");
+    }
+    
+    public void postResponse(String response, String barrel) throws RemoteException{
+        System.out.println("OLA ESTOU AQUI!");
     }
 
 
@@ -72,15 +161,24 @@ public class SearchModule {
             return;
         }
         
-        if (args.length > 1){
+        if (args.length != 1){
             printUsage();
             return;
         }
 
-        // instanciar um search module para carregar a config
-        SearchModule searchModule = new SearchModule();
-        searchModule.loadConfig(args[0]);
-
+        SearchModule searchModule;
+        try{
+            // instanciar um search module para carregar a config
+            searchModule = new SearchModule();
+            if (!searchModule.loadConfig(args[0])){
+                return;
+            }
+        }
+        catch (Exception e){
+            return;
+        }
+        
+        
         // indice do barrel a consultar
         int barrelIndex = 0;
 
@@ -88,21 +186,29 @@ public class SearchModule {
         Scanner sc = new Scanner(System.in);
         String command;
         ArrayList<String> query;
-
+        
         while (true) {
-
+            
             command = sc.nextLine();
             if (command.equals("q") || command.equals("quit")) break;
-
+            
             try {
 
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) Naming.lookup("rmi://localhost:" + searchModule.rmiPort + "/" + searchModule.barrels.get(barrelIndex));
-    
+                QueryIf barrel = (QueryIf) Naming.lookup(TratamentoStrings.urlTratamento(searchModule.rmiPort, searchModule.barrels.get(barrelIndex)));
+                
                 query = new ArrayList<>(Arrays.asList(command.split(" ")));
-    
+                
                 System.out.println(barrel.execQuery(query));
     
+                // if (!register(port, rmiEndpointSearchModule, sm)){
+                //     return;
+                // }
+    
+                // Menu cliente
+                searchModule.menu();
+                System.out.println("Pressione CTRL+C para fechar.");
+                    
                 
             } catch (NotBoundException e) {
                 System.out.println("Erro: não existe um servidor registado no endpoint '" + searchModule.barrels.get(barrelIndex) + "'!");
@@ -131,10 +237,7 @@ public class SearchModule {
                 barrelIndex += 1;
             }
 
+
         }
-
-        sc.close();
-
     }
-    
 }

@@ -1,4 +1,4 @@
-package searchEngine.barrel;
+package barrel;
 
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
