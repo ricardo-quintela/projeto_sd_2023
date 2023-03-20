@@ -9,9 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
-
-import fileWorker.TextFileWorker;
 import searchEngine.barrel.QueryIf;
+import searchEngine.fileWorker.TextFileWorker;
 
 /**
  * Um {@code SearchModule} recebe pedidos RMI de um cliente e realiza

@@ -1,4 +1,4 @@
-package fileWorker;
+package searchEngine.fileWorker;
 
 import java.io.*;
 import java.util.ArrayList;
