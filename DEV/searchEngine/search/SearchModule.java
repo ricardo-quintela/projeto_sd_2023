@@ -50,7 +50,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             }
 
         }
-
         sc.close();
     }
 
@@ -153,9 +152,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
             // Menu cliente
             sm.menu();
-            return;
+            System.out.println("Pressione CTRL+C para fechar.");
+            return;    
 
-            
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + rmiEndpointBarrels + "'!");
             return;
