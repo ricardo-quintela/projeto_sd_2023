@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import utils.TratamentoStrings;
 import searchEngine.search.SearchResponse;
 
 public class Client{
@@ -21,7 +22,7 @@ public class Client{
      * Imprime no {@code stdin} o modo de uso do programa
      */
     private static void printUsage() {
-        System.out.println("Modo de uso:\nsearch {server_endpoint}");
+        System.out.println("Modo de uso:\nporta do searchModule {port}\nsearch {server_endpoint}");
     }
 
     public static void main(String[] args) {
@@ -32,17 +33,18 @@ public class Client{
             return;
         }
         
-        if (args.length > 1){
+        if (args.length != 2){
             printUsage();
             return;
         }
 
-        String rmiEndpoint = args[0];
+        int port = Integer.parseInt(args[0]);
+        String rmiEndpoint = args[1];
 
         try{
 
             // ligar ao server registado no rmiEndpoint fornecido
-            SearchResponse ligacaoSearchModule = (SearchResponse) Naming.lookup("rmi://localhost:1234/ola");
+            SearchResponse ligacaoSearchModule = (SearchResponse) Naming.lookup(TratamentoStrings.urlTratamento(port, rmiEndpoint));
             ligacaoSearchModule.postResponse("asad", "asdasd");
 
         } catch (NotBoundException e) {

@@ -4,3 +4,4 @@
 ./searchEngine/client/Client.java
 ./searchEngine/search/SearchModule.java
 ./searchEngine/search/SearchResponse.java
+./utils/TratamentoStrings.java

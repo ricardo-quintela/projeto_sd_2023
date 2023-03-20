@@ -12,6 +12,7 @@ import java.util.Scanner;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import utils.TratamentoStrings;
 import searchEngine.barrel.QueryIf;
 
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
@@ -70,7 +71,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
      * Imprime no {@code stdin} o modo de uso do programa
      */
     private static void printUsage() {
-        System.out.println("Modo de uso:\nsearch {server_endpoint}");
+        System.out.println("Modo de uso:\nporta do searchModule {port}\nsearch {server_endpoint}\nbarrel {barrel_endpoint}");
     }
 
     public void postResponse(String response, String barrel) throws RemoteException{
@@ -86,17 +87,25 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return;
         }
         
-        if (args.length > 1){
+        if (args.length != 3){
             printUsage();
             return;
         }
 
-        String rmiEndpoint = args[0];
+        // Conexao do server - porta e endpoint
+        // A porta tem de ser igual 
+        int port = Integer.parseInt(args[0]);
+        String rmiEndpointSearchModule = args[1];
+
+        // Conexao do barrel a que queremos ligar
+        String rmiEndpointBarrels = args[2];
         
         try (Scanner sc = new Scanner(System.in)) {
 
+            System.out.println(rmiEndpointBarrels);
+
             // ligar ao server registado no rmiEndpoint fornecido
-            QueryIf barrel = (QueryIf) Naming.lookup(rmiEndpoint);
+            QueryIf barrel = (QueryIf) Naming.lookup(rmiEndpointBarrels);
 
             ArrayList<String> query = new ArrayList<>();
 
@@ -106,19 +115,19 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
             SearchModule sm = new SearchModule();
 
-            if (!register(1234, rmiEndpoint, sm)){
+            if (!register(port, rmiEndpointSearchModule, sm)){
                 return;
             }
 
             
         } catch (NotBoundException e) {
-            System.out.println("Erro: não existe um servidor registado no endpoint '" + rmiEndpoint + "'!");
+            System.out.println("Erro: não existe um servidor registado no endpoint '" + rmiEndpointBarrels + "'!");
             return;
         } catch (AccessException e) {
-            System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + rmiEndpoint + "'!");
+            System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + rmiEndpointBarrels + "'!");
             return;
         } catch (MalformedURLException e) {
-            System.out.println("Erro: O endpoint fornecido ('" + rmiEndpoint + "') não forma um URL válido!");
+            System.out.println("Erro: O endpoint fornecido ('" + rmiEndpointBarrels + "') não forma um URL válido!");
             return;
         } catch (RemoteException e) {
             System.out.println("Erro: Não foi possível encontrar o registo");
