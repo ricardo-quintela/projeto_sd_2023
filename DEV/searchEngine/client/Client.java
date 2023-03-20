@@ -1,4 +1,4 @@
-package searchEngine.client;
+package client;
 
 import java.net.MalformedURLException;
 import java.rmi.AccessException;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import utils.TratamentoStrings;
-import searchEngine.search.SearchResponse;
+import search.SearchResponse;
 
 public class Client{
     private String name;

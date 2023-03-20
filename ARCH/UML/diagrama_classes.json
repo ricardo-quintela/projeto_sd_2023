@@ -1,22 +1,20 @@
 {
-    "Barrel": {
+    "SearchModule": {
         "pos": [
-            44,
-            64
+            527,
+            500
         ],
         "color": [
-            0,
-            123,
-            255
+            255,
+            6,
+            0
         ],
         "attributes": [
-            "-rmiPort: int",
-            "-rmiEndpoint: String"
+            "-barrels: ArrayList<String>",
+            "-rmiPort: int"
         ],
         "methods": [
-            "+register(int, String, Barrel): boolean",
-            "+main(String[])",
-            "-printUsage()"
+            "+loadConfig(String)"
         ],
         "parent": null
     },
@@ -100,22 +98,47 @@
         ],
         "parent": "SearchModule"
     },
-    "SearchModule": {
+    "Barrel": {
         "pos": [
-            527,
-            500
+            44,
+            64
         ],
         "color": [
-            255,
-            6,
-            0
+            0,
+            123,
+            255
         ],
         "attributes": [
-            "-barrels: ArrayList<String>",
-            "-rmiPort: int"
+            "-rmiPort: int",
+            "-rmiEndpoint: String"
         ],
         "methods": [
-            "+loadConfig(String)"
+            "+register(int, String, Barrel): boolean",
+            "+main(String[])",
+            "-printUsage()"
+        ],
+        "parent": null
+    },
+    "UrlQueue": {
+        "pos": [
+            680,
+            132
+        ],
+        "color": [
+            0,
+            255,
+            234
+        ],
+        "attributes": [
+            "-urls: LinkedList<String>",
+            "+main(String[])"
+        ],
+        "methods": [
+            "+add(String)",
+            "+remove(): String",
+            "+get(int): String",
+            "+isEmpty(): boolean",
+            "+register(int, String, UrlQueue): boolean~"
         ],
         "parent": null
     }

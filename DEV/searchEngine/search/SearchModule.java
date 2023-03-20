@@ -1,4 +1,4 @@
-package searchEngine.search;
+package search;
 
 import java.net.MalformedURLException;
 import java.rmi.AccessException;
@@ -8,17 +8,60 @@ import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import barrel.QueryIf;
+import fileWorker.TextFileWorker;
 import utils.TratamentoStrings;
-import searchEngine.barrel.QueryIf;
 
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
+    /**
+     * Um {@code SearchModule} recebe pedidos RMI de um cliente e realiza
+     * pedidos a {@code Barrels} com endpoints fornecidos num ficheiro de configuração
+     */
+    private ArrayList<String> barrels;
+    private int rmiPort;
 
+    
+    /**
+     * Construtor por omissão da classe SearchModule
+     */
     public SearchModule() throws RemoteException{}
+    
+
+    /**
+     * Carrega a configuração a partir de um ficheiro
+     * fornecido em {@code path}
+     * @param path o caminho do ficheiro
+     * @return true caso a configuração seja carregada; false caso contrário
+     */
+    public boolean loadConfig(String path){
+        TextFileWorker fileWorker = new TextFileWorker(path);
+        ArrayList<String> lines = fileWorker.read();
+
+        try {
+            this.rmiPort = Integer.parseInt(lines.get(0));
+        } catch (NumberFormatException e){
+            System.out.println("Erro: Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'!");
+            return false;
+        }
+
+        this.barrels = new ArrayList<String>(lines.subList(1, lines.size()));
+
+        if (this.barrels.size() == 0){
+            System.out.println("Erro: Configuracao deve especificar a porta do registo RMI e os endpoints de cada storage barrel um por linha");
+            return false;
+        }
+
+        return true;
+        
+    }
+
+
 
 
     public void menu(){
@@ -104,7 +147,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     private static void printUsage() {
         System.out.println("Modo de uso:\nporta do searchModule {port}\nsearch {server_endpoint}\nbarrel {barrel_endpoint}");
     }
-
+    
     public void postResponse(String response, String barrel) throws RemoteException{
         System.out.println("OLA ESTOU AQUI!");
     }
@@ -118,57 +161,83 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return;
         }
         
-        if (args.length != 3){
+        if (args.length != 1){
             printUsage();
             return;
         }
 
-        // Conexao do server - porta e endpoint
-        // A porta tem de ser igual 
-        int port = Integer.parseInt(args[0]);
-        String rmiEndpointSearchModule = args[1];
-
-        // Conexao do barrel a que queremos ligar
-        String rmiEndpointBarrels = args[2];
-        
-        try (Scanner sc = new Scanner(System.in)) {
-
-            System.out.println(rmiEndpointBarrels);
-
-            // ligar ao server registado no rmiEndpoint fornecido
-            QueryIf barrel = (QueryIf) Naming.lookup(rmiEndpointBarrels);
-
-            ArrayList<String> query = new ArrayList<>();
-
-            query.add("Ola");
-
-            System.out.println(barrel.execQuery(query));
-
-            SearchModule sm = new SearchModule();
-
-            if (!register(port, rmiEndpointSearchModule, sm)){
+        SearchModule searchModule;
+        try{
+            // instanciar um search module para carregar a config
+            searchModule = new SearchModule();
+            if (!searchModule.loadConfig(args[0])){
                 return;
             }
-
-            // Menu cliente
-            sm.menu();
-            System.out.println("Pressione CTRL+C para fechar.");
-            return;    
-
-        } catch (NotBoundException e) {
-            System.out.println("Erro: não existe um servidor registado no endpoint '" + rmiEndpointBarrels + "'!");
-            return;
-        } catch (AccessException e) {
-            System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + rmiEndpointBarrels + "'!");
-            return;
-        } catch (MalformedURLException e) {
-            System.out.println("Erro: O endpoint fornecido ('" + rmiEndpointBarrels + "') não forma um URL válido!");
-            return;
-        } catch (RemoteException e) {
-            System.out.println("Erro: Não foi possível encontrar o registo");
+        }
+        catch (Exception e){
             return;
         }
+        
+        
+        // indice do barrel a consultar
+        int barrelIndex = 0;
 
-    }
+        // instanciar um Scanner para ler comandos da consola
+        Scanner sc = new Scanner(System.in);
+        String command;
+        ArrayList<String> query;
+        
+        while (true) {
+            
+            command = sc.nextLine();
+            if (command.equals("q") || command.equals("quit")) break;
+            
+            try {
+
+                // ligar ao server registado no rmiEndpoint fornecido
+                QueryIf barrel = (QueryIf) Naming.lookup(TratamentoStrings.urlTratamento(searchModule.rmiPort, searchModule.barrels.get(barrelIndex)));
+                
+                query = new ArrayList<>(Arrays.asList(command.split(" ")));
+                
+                System.out.println(barrel.execQuery(query));
     
+                // if (!register(port, rmiEndpointSearchModule, sm)){
+                //     return;
+                // }
+    
+                // Menu cliente
+                searchModule.menu();
+                System.out.println("Pressione CTRL+C para fechar.");
+                    
+                
+            } catch (NotBoundException e) {
+                System.out.println("Erro: não existe um servidor registado no endpoint '" + searchModule.barrels.get(barrelIndex) + "'!");
+                // voltar ao início da fila de barrels
+                if (barrelIndex == searchModule.barrels.size() - 1){
+                    barrelIndex = 0;
+                    continue;
+                }
+                barrelIndex += 1;
+                continue;
+
+            } catch (AccessException e) {
+                System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + searchModule.barrels.get(barrelIndex) + "'!");
+                break;
+            } catch (MalformedURLException e) {
+                System.out.println("Erro: O endpoint fornecido ('" + searchModule.barrels.get(barrelIndex) + "') não forma um URL válido!");
+                break;
+            } catch (RemoteException e) {
+                System.out.println("Erro: " + searchModule.barrels.get(barrelIndex) + " nao esta disponivel.");
+                
+                // voltar ao início da fila de barrels
+                if (barrelIndex == searchModule.barrels.size() - 1){
+                    barrelIndex = 0;
+                    continue;
+                }
+                barrelIndex += 1;
+            }
+
+
+        }
+    }
 }
