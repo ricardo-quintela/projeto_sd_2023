@@ -18,8 +18,40 @@ import searchEngine.barrel.QueryIf;
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
 
-    public SearchModule() throws RemoteException{
+    public SearchModule() throws RemoteException{}
 
+
+    public void menu(){
+
+        Scanner sc = new Scanner(System.in);
+        int loop = 1;
+        while (loop == 1){
+
+            System.out.println("Google da wish\nDigite a opcao desejada:\n1 - url\n2 - palavra\n3 - sair\nDigite: ");
+
+            try{
+                
+                int num = sc.nextInt();
+
+                switch(num){
+                    case 1:
+                        System.out.println("URL\n");
+                        break;
+                    case 2:
+                        System.out.println("Palavra\n");
+                        break;
+                    case 3:
+                        loop = 0;
+                        break;
+                }
+            } 
+            catch (Exception e){
+                System.out.println("Digite um valor permitido");
+            }
+
+        }
+
+        sc.close();
     }
 
     /**
@@ -118,6 +150,10 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             if (!register(port, rmiEndpointSearchModule, sm)){
                 return;
             }
+
+            // Menu cliente
+            sm.menu();
+            return;
 
             
         } catch (NotBoundException e) {
