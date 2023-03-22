@@ -1,4 +1,4 @@
-package search;
+package searchEngine.search;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

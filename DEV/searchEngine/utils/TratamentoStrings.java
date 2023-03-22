@@ -1,4 +1,4 @@
-package utils;
+package searchEngine.utils;
 
 public class TratamentoStrings {
     

@@ -1,4 +1,4 @@
-package barrel;
+package searchEngine.barrel;
 
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
@@ -87,7 +87,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
      * Imprime no {@code stdin} o modo de uso do programa
      */
     private static void printUsage() {
-        System.out.println("Modo de uso:\nbarrel {rmi_port} {rmi_endpoint}");
+        System.out.println("Modo de uso:\nBarrel {rmi_port} {rmi_endpoint}\n- rmi_port: Porta onde o registo RMI vai ser criado ou encontrado\n- rmi_endpoint: Endpoint do barrel a ser registado");
     }
 
     @Override

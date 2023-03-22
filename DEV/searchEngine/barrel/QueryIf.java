@@ -1,4 +1,4 @@
-package barrel;
+package searchEngine.barrel;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

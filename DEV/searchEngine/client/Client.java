@@ -1,15 +1,13 @@
-package client;
+package searchEngine.client;
 
 import java.net.MalformedURLException;
 import java.rmi.AccessException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Scanner;
 
-import utils.TratamentoStrings;
-import search.SearchResponse;
+import searchEngine.utils.TratamentoStrings;
+import searchEngine.search.SearchResponse;
 
 public class Client{
     private String name;
