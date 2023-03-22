@@ -1,7 +1,0 @@
-./searchEngine/barrel/Barrel.java
-./searchEngine/barrel/QueryIf.java
-./searchEngine/client/Client.java
-./searchEngine/fileWorker/TextFileWorker.java
-./searchEngine/search/SearchModule.java
-./searchEngine/search/SearchResponse.java
-./searchEngine/utils/TratamentoStrings.java
