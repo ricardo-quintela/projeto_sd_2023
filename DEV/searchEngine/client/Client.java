@@ -7,6 +7,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 import searchEngine.utils.TratamentoStrings;
+import searchEngine.URLs.UrlQueueInterface;
 import searchEngine.search.SearchResponse;
 
 public class Client{
@@ -44,6 +45,12 @@ public class Client{
             // ligar ao server registado no rmiEndpoint fornecido
             SearchResponse ligacaoSearchModule = (SearchResponse) Naming.lookup(TratamentoStrings.urlTratamento(port, rmiEndpoint));
             ligacaoSearchModule.postResponse("asad", "asdasd");
+
+            // UrlQueueInterface ligacaoUrlQueue = (UrlQueueInterface) Naming.lookup(TratamentoStrings.urlTratamento(port, rmiEndpoint));
+            // System.out.println(ligacaoUrlQueue.isEmpty());
+            // ligacaoUrlQueue.add("url1");
+            // System.out.println(ligacaoUrlQueue.isEmpty());
+            // System.out.println(ligacaoUrlQueue.get(0));
 
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + rmiEndpoint + "'!");
