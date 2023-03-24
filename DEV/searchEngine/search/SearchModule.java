@@ -7,9 +7,6 @@ import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -73,7 +70,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
 
 
-    public boolean execSearch(CopyOnWriteArrayList<String> query){
+    public String execSearch(CopyOnWriteArrayList<String> query) throws RemoteException{
 
         int barrelIndex = 0;
 
@@ -86,10 +83,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 // ligar ao server registado no rmiEndpoint fornecido
                 QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.rmiPortBarrels).lookup(this.barrels.get(barrelIndex));
 
-                // printar a query que o barrel recebeu
-                System.out.println(barrel.execQuery(query));
-
-                return true;     
+                // retornar a resposta para o cliente
+                return barrel.execQuery(query);   
                 
             } catch (NotBoundException e) {
                 System.out.println("Erro: não existe um servidor registado no endpoint '" + this.barrels.get(barrelIndex) + "'!");
@@ -112,86 +107,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         }
 
-        return false;
-
-    }
-
-
-
-    /**
-     * Pede ao utilizador por uma string de palavras chave para pesquisar
-     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
-     */
-    public void searchMenu(Scanner sc){
-
-        while (true){
-
-            System.out.print("Googol - Pesquisa\nDigite palavras-chave para pesquisar e '/back' para voltar atras.\nDigite: ");
-            
-            // ler uma linha do stdin
-            String query = sc.nextLine();
-            
-            // voltar atrás no menu
-            if (query.equals("/back")){
-                break;
-            }
-
-            // criar uma lista de palavras-chave
-            CopyOnWriteArrayList<String> keywords = new CopyOnWriteArrayList<>(query.split("[^a-zA-Z0-9]+"));
-
-            // pedir a um barrel para executar a query
-            if (!execSearch(keywords)){
-                System.out.println("Erro: Nao houve resposta para o pedido!");
-            }
-
-        }
-    }
-
-
-
-    /**
-     * Menu de utilizador
-     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
-     */
-    public void menu(Scanner sc){
-
-        boolean loop = true;
-        while (loop){
-
-            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - sair\nDigite: ");
-
-            try{
-                
-                int num = sc.nextInt();
-
-                switch(num){
-
-                    // indexar um URL
-                    case 1:
-                        System.out.println("Indexar um URL foi selecionado\n");
-                        break;
-
-                    // pesquisar
-                    case 2:
-                        this.searchMenu(sc);
-                        break;
-
-                    // sair
-                    case 3:
-                        loop = false;
-                        break;
-
-                    default:
-                        System.out.println("Escolha invalida.");
-                }
-            } 
-            catch (InputMismatchException e){
-                System.out.println("Digite um valor permitido.");
-            } catch (NoSuchElementException e){
-                System.out.println("Digite um valor permitido.");
-            }
-
-        }
+        return null;
 
     }
 
@@ -236,10 +152,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
      */
     private static void printUsage() {
         System.out.println("Modo de uso:\nSearchModule {path}\n- path: Caminho do ficheiro de configuracao");
-    }
-    
-    public void postResponse(String response, String barrel) throws RemoteException{
-        System.out.println("OLA ESTOU AQUI!");
     }
 
 
@@ -295,18 +207,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             searchModule.unexport();
             return;
         }
-        
-        // instanciar um scanner
-        Scanner sc = new Scanner(System.in);
-        
-
-        // menu do clente (TEMPORARIO)
-        searchModule.menu(sc);
-
-        sc.close();
-
-
-        searchModule.unexport();
 
     }
 }
