@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Barrel extends UnicastRemoteObject implements QueryIf {
 
@@ -27,7 +27,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
     }
 
     @Override
-    public String execQuery(ArrayList<String> query) throws RemoteException {
+    public String execQuery(CopyOnWriteArrayList<String> query) throws RemoteException {
         String string = "";
 
         for (String word : query) {

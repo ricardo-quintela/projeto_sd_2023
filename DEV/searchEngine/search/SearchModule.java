@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
@@ -72,7 +73,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
 
 
-    public boolean execSearch(ArrayList<String> query){
+    public boolean execSearch(CopyOnWriteArrayList<String> query){
 
         int barrelIndex = 0;
 
@@ -117,27 +118,67 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
 
 
+    /**
+     * Pede ao utilizador por uma string de palavras chave para pesquisar
+     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
+     */
+    public void searchMenu(Scanner sc){
 
+        while (true){
+
+            System.out.print("Googol - Pesquisa\nDigite palavras-chave para pesquisar e '/back' para voltar atras.\nDigite: ");
+            
+            // ler uma linha do stdin
+            String query = sc.nextLine();
+            
+            // voltar atrás no menu
+            if (query.equals("/back")){
+                break;
+            }
+
+            // criar uma lista de palavras-chave
+            CopyOnWriteArrayList<String> keywords = new CopyOnWriteArrayList<>(query.split("[^a-zA-Z0-9]+"));
+
+            // pedir a um barrel para executar a query
+            if (!execSearch(keywords)){
+                System.out.println("Erro: Nao houve resposta para o pedido!");
+            }
+
+        }
+    }
+
+
+
+    /**
+     * Menu de utilizador
+     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
+     */
     public void menu(Scanner sc){
 
-        int loop = 1;
-        while (loop == 1){
+        boolean loop = true;
+        while (loop){
 
-            System.out.println("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - sair\nDigite: ");
+            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - sair\nDigite: ");
 
             try{
                 
                 int num = sc.nextInt();
 
                 switch(num){
+
+                    // indexar um URL
                     case 1:
                         System.out.println("Indexar um URL foi selecionado\n");
                         break;
+
+                    // pesquisar
                     case 2:
-                        System.out.println("Pesquisar por uma query\n");
+                        this.searchMenu(sc);
                         break;
+
+                    // sair
                     case 3:
-                        loop = 0;
+                        loop = false;
                         break;
 
                     default:
