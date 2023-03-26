@@ -35,7 +35,7 @@ public class WordIndex {
 
     @Override
     public String toString() {
-        String string = "";
+        String string = "item_count | " + this.hashMap.size();
 
         // iterar pelas palavras guardadas no INDEX de URLS
         int i = 0, j;
