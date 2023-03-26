@@ -55,7 +55,7 @@ public class Client{
             // pedir a um barrel para executar a query
             try {
 
-                response = searchModuleIF.execSearch(keywords);
+                response = searchModuleIF.execSearch(this.name, keywords);
 
                 // caso o pedido não possa ser executado
                 if (response == null){

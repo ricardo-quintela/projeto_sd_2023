@@ -13,6 +13,7 @@ import java.rmi.registry.Registry;
 
 import searchEngine.barrel.QueryIf;
 import searchEngine.fileWorker.TextFileWorker;
+import searchEngine.utils.Log;
 
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
@@ -20,15 +21,26 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
      * Um {@code SearchModule} recebe pedidos RMI de um cliente e realiza
      * pedidos a {@code Barrels} com endpoints fornecidos num ficheiro de configuração
      */
-    private ArrayList<String> barrels;
-    private int rmiPort, rmiPortBarrels;
+    private ArrayList<Integer> barrel_ports;
+    private ArrayList<String> barrel_endpoints;
+    private int rmiPort;
     private String rmiEndpoint;
+
+    private Log log;
 
     
     /**
      * Construtor por omissão da classe SearchModule
+     * @throws RemoteException caso ocorra um erro de RMI
      */
-    public SearchModule() throws RemoteException{}
+    public SearchModule() throws RemoteException{
+
+        // guardar os endpoints dos barrels
+        this.barrel_ports = new ArrayList<Integer>();
+        this.barrel_endpoints = new ArrayList<String>();
+
+        this.log = new Log();
+    }
     
 
     /**
@@ -43,64 +55,79 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         // ler a porta RMI do SearchModule e depois dos Barrels
         try {
-            this.rmiPort = Integer.parseInt(lines.get(0));
-            this.rmiPortBarrels = Integer.parseInt(lines.get(2));
+            this.rmiPort = Integer.parseInt(lines.get(0).split("/")[0]);
+            this.rmiEndpoint = lines.get(0).split("/")[1];
         } catch (NumberFormatException e){
-            System.out.println("Erro: Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'!\n Nao foi possivel carregar uma porta!");
+            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'!\n Nao foi possivel carregar a porta do SearchModule!");
             return false;
         } catch (IndexOutOfBoundsException e){
-            System.out.println("Erro: Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Nao existem linhas suficientes!");
+            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Ficheiro esta vazio!");
             return false;
         }
 
-        // guardar o endpoint do SearchModule
-        this.rmiEndpoint = lines.get(1);
+        try{
 
-        // guardar os endpoints dos barrels
-        this.barrels = new ArrayList<String>(lines.subList(3, lines.size()));
+            // adiciona os portos e os endpoints às suas respetivas listas
+            for (int i = 1; i < lines.size(); i++) {
+                this.barrel_ports.add(Integer.parseInt(lines.get(i).split("/")[0]));
+                this.barrel_endpoints.add(lines.get(i).split("/")[1]);
+            }
 
-        if (this.barrels.size() == 0){
-            System.out.println("Erro: Configuracao deve especificar a porta do registo RMI do SearchModule, o endpoint do SearchModule no sesu próprio registo, a porta do registo RMI dos Barrels e os endpoints de cada Barrel um por linha");
+        } catch (NumberFormatException e){
+            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Porta invalida!");
+            return false;
+        } catch (IndexOutOfBoundsException e){
+            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Um URL foi mal especificado!");
             return false;
         }
 
+        if (this.barrel_ports.size() == 0){
+            log.error(toString(), "Configuracao deve especificar a porta do registo RMI do SearchModule, o endpoint do SearchModule no sesu próprio registo, a porta do registo RMI dos Barrels e os endpoints de cada Barrel um por linha");
+            return false;
+        }
+
+        
+        log.info(toString(), "Configuracao carregada!");
         return true;
         
     }
 
 
 
-    public String execSearch(CopyOnWriteArrayList<String> query) throws RemoteException{
-
+    public String execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException{
+        
         int barrelIndex = 0;
 
+        log.info(toString(), "Recebida query de " + name);
+
         // tentar com todos os barrels
-        while (barrelIndex < this.barrels.size()){
+        while (barrelIndex < this.barrel_ports.size()){
 
 
             try {
+
     
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.rmiPortBarrels).lookup(this.barrels.get(barrelIndex));
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(barrelIndex)).lookup(this.barrel_endpoints.get(barrelIndex));
 
                 // retornar a resposta para o cliente
                 return barrel.execQuery(query);   
                 
             } catch (NotBoundException e) {
-                System.out.println("Erro: não existe um servidor registado no endpoint '" + this.barrels.get(barrelIndex) + "'!");
+                log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(barrelIndex) + "'!");
 
                 barrelIndex += 1;
                 continue;
     
             } catch (AccessException e) {
 
-                System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + this.barrels.get(barrelIndex) + "'!");
+                log.error(toString(), "Esta máquina nao tem permissões para ligar ao endpoint '" + this.barrel_endpoints.get(barrelIndex) + "'!");
                 barrelIndex += 1;
                 continue;
 
             } catch (RemoteException e) {
 
-                System.out.println("Erro: " + this.barrels.get(barrelIndex) + " nao esta disponivel.");
+                log.error(toString(), this.barrel_ports.get(barrelIndex) + "/" + this.barrel_endpoints.get(barrelIndex) + " nao esta disponivel.");
                 barrelIndex += 1;
                 continue;
             }
@@ -118,40 +145,33 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
      * @param endpoint o endpoint em que a instância de {@code SearchModule} vai ser registada
      * @param barrel   o {@code SearchModule} que se quer ligar
      */
-    public static boolean register(int port, String endpoint, SearchModule searchModule) {
+    public boolean register(int port, String endpoint) {
         Registry registry;
 
         // tentar criar o registo
         try {
             registry = LocateRegistry.createRegistry(port);
-            System.out.println("Registo criado em 'localhost:" + port);
+            log.info(toString(), "Registo criado em 'localhost:" + port);
         } catch (RemoteException re) { // caso nao consiga criar sai com erro
             
-            System.out.println("Erro: Nao foi possivel criar o registo em 'localhost:" + port + "/" + endpoint + "'");
+            log.error(toString(), "Nao foi possivel criar o registo em 'localhost:" + port + "/" + endpoint + "'");
             return false;
         }
 
         // tentar registar o Barrel no endpoint atribuido
         try {
-            registry.bind(endpoint, searchModule);
-            System.out.println("SearchModule registado em 'localhost:" + port + "/" + endpoint + "'");
+            registry.bind(endpoint, this);
+            log.info(toString(), "SearchModule registado em 'localhost:" + port + "/" + endpoint + "'");
 
         } catch (AlreadyBoundException e) {
-            System.out.println("Erro: 'localhost:" + port + "/" + endpoint + "' ja foi atribuido!");
+            log.error(toString(), "'localhost:" + port + "/" + endpoint + "' ja foi atribuido!");
 
         } catch (RemoteException e) {
-            System.out.println("Erro: Ocorreu um erro a registar o Barrel em 'localhost:" + port + "/" + endpoint + "'");
+            log.error(toString(), "Ocorreu um erro a registar o Barrel em 'localhost:" + port + "/" + endpoint + "'");
             return false;
         }
 
         return true;
-    }
-
-    /**
-     * Imprime no {@code stdin} o modo de uso do programa
-     */
-    private static void printUsage() {
-        System.out.println("Modo de uso:\nSearchModule {path}\n- path: Caminho do ficheiro de configuracao");
     }
 
 
@@ -159,7 +179,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
      * Tenta remover o objeto do RMI runtime
      * @return true caso consiga; false caso contrario
      */
-    public boolean unexport(){
+    private boolean unexport(){
 
         try {
             return UnicastRemoteObject.unexportObject(this, true);
@@ -168,6 +188,19 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         }
         return false;
 
+    }
+
+
+    /**
+     * Imprime no {@code stdin} o modo de uso do programa
+     */
+    private static void printUsage() {
+        System.out.println("Modo de uso:\nSearchModule {path}\n- path: Caminho do ficheiro de configuracao");
+    }
+
+    @Override
+    public String toString() {
+        return "SearchModule@localhost:" + this.rmiPort + "/" + this.rmiEndpoint;
     }
 
 
@@ -201,9 +234,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             searchModule.unexport();
             return;
         }
-
+        
         // tentar registar o SearchModule no seu próprio RMI register
-        if (!register(searchModule.rmiPort, searchModule.rmiEndpoint, searchModule)){
+        if (!searchModule.register(searchModule.rmiPort, searchModule.rmiEndpoint)){
             searchModule.unexport();
             return;
         }
