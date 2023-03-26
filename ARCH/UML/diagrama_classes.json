@@ -1,22 +1,27 @@
 {
-    "Downloader": {
+    "Log": {
         "pos": [
-            292,
-            520
+            630,
+            67
         ],
         "color": [
-            102,
+            126,
             0,
             255
         ],
-        "attributes": [],
-        "methods": [],
+        "attributes": [
+            "-dtf: DateTimeFormatter"
+        ],
+        "methods": [
+            "+info(String, String)",
+            "+error(String, String)"
+        ],
         "parent": null
     },
     "UrlQueue": {
         "pos": [
-            54,
-            695
+            44,
+            523
         ],
         "color": [
             0,
@@ -36,97 +41,10 @@
         ],
         "parent": null
     },
-    "<<QueryIf>>": {
-        "pos": [
-            63,
-            385
-        ],
-        "color": [
-            0,
-            135,
-            255
-        ],
-        "attributes": [],
-        "methods": [
-            "+execQuery(ArrayList<String>): ArrayList<String>"
-        ],
-        "parent": "Barrel"
-    },
-    "<<SearchRequest>>": {
-        "pos": [
-            555,
-            491
-        ],
-        "color": [
-            255,
-            18,
-            0
-        ],
-        "attributes": [],
-        "methods": [
-            "+searh(ArrayList<String>): ArrayList<String>"
-        ],
-        "parent": "SearchModule"
-    },
-    "Barrel": {
-        "pos": [
-            44,
-            64
-        ],
-        "color": [
-            0,
-            123,
-            255
-        ],
-        "attributes": [
-            "-rmiPort: int",
-            "-rmiEndpoint: String"
-        ],
-        "methods": [
-            "+register(int, String, Barrel): boolean",
-            "+main(String[])",
-            "-printUsage()"
-        ],
-        "parent": null
-    },
-    "Client": {
-        "pos": [
-            74,
-            555
-        ],
-        "color": [
-            0,
-            255,
-            15
-        ],
-        "attributes": [
-            "-name: String"
-        ],
-        "methods": [
-            "+main(String[])"
-        ],
-        "parent": null
-    },
-    "Crawler": {
-        "pos": [
-            298,
-            586
-        ],
-        "color": [
-            255,
-            132,
-            0
-        ],
-        "attributes": [],
-        "methods": [
-            "+main(String[])"
-        ],
-        "parent": null
-    },
     "SearchModule": {
         "pos": [
-            519,
-            39
+            340,
+            64
         ],
         "color": [
             255,
@@ -141,10 +59,84 @@
         ],
         "methods": [
             "+loadConfig(String)",
-            "+execSearch(ArrayList<String>): boolean",
-            "+menu(Scanner)",
-            "+register(int, String, SearchModule): boolean",
-            "+main(String[])"
+            "+register(int, String): boolean",
+            "-unexport(): boolean"
+        ],
+        "parent": null
+    },
+    "<<QueryIf>>": {
+        "pos": [
+            24,
+            401
+        ],
+        "color": [
+            0,
+            135,
+            255
+        ],
+        "attributes": [],
+        "methods": [
+            "+execQuery(CopyOnWriteArrayList<String>): String"
+        ],
+        "parent": "Barrel"
+    },
+    "Barrel": {
+        "pos": [
+            44,
+            64
+        ],
+        "color": [
+            0,
+            123,
+            255
+        ],
+        "attributes": [
+            "-rmiPort: int",
+            "-rmiEndpoint: String",
+            "-log: Log"
+        ],
+        "methods": [
+            "+register(int, String): boolean",
+            "+main(String[])",
+            "-printUsage()",
+            "-unexport(): boolean"
+        ],
+        "parent": null
+    },
+    "<<SearchRequest>>": {
+        "pos": [
+            493,
+            373
+        ],
+        "color": [
+            255,
+            18,
+            0
+        ],
+        "attributes": [],
+        "methods": [
+            "+execSeacrh(String, CopyOnWriteArrayList<String>): String"
+        ],
+        "parent": "SearchModule"
+    },
+    "Client": {
+        "pos": [
+            456,
+            563
+        ],
+        "color": [
+            0,
+            255,
+            15
+        ],
+        "attributes": [
+            "-name: String"
+        ],
+        "methods": [
+            "+main(String[])",
+            "+searchMenu(Scanner, SearchReponse)",
+            "+menu(Scanner, SearchResponse)",
+            "+printUsage()"
         ],
         "parent": null
     }

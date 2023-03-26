@@ -1,16 +1,21 @@
 package searchEngine.barrel;
 
 import java.rmi.AlreadyBoundException;
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import searchEngine.utils.Log;
 
 public class Barrel extends UnicastRemoteObject implements QueryIf {
 
     private int rmiPort;
     private String rmiEndpoint;
+
+    private Log log;
 
     /**
      * Construtor por omissão da classe {@code Barrel}
@@ -18,21 +23,25 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
     public Barrel(int rmiPort, String rmiEndpoint) throws RemoteException {
         this.rmiPort = rmiPort;
         this.rmiEndpoint = rmiEndpoint;
+        this.log = new Log();
     }
 
     /**
      * Construtor por omissão da classe {@code Barrel}
      */
     public Barrel() throws RemoteException {
+        this.log = new Log();
     }
 
     @Override
-    public String execQuery(ArrayList<String> query) throws RemoteException {
+    public String execQuery(CopyOnWriteArrayList<String> query) throws RemoteException {
         String string = "";
 
         for (String word : query) {
             string += word + " ";
         }
+
+        log.info(toString(), "Query recebida: '" + query + "'");
 
         return this + ": " + string;
     }
@@ -41,46 +50,57 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
     /**
      * Tenta criar o registo RMI
      * <p>
-     * Caso o registo já exista regista uma instância de {@code Barrel} no mesmo
+     * Caso o registo já exista regista o registo falha e é retornado false
      * 
      * @param port     o porto do registo
      * @param endpoint o endpoint em que a instância de {@code Barrel} vai ser
      *                 registada
      * @param barrel   o {@code Barrel} que se quer ligar
+     * @return true caso seja possível registar; false caso contrário
      */
-    public static boolean register(int port, String endpoint, Barrel barrel) {
+    public boolean register() {
         Registry registry;
 
         // tentar criar o registo
         try {
-            registry = LocateRegistry.createRegistry(port);
-            System.out.println("Registo criado em 'localhost:" + port);
+            registry = LocateRegistry.createRegistry(this.rmiPort);
+            log.info(toString(), "Registo criado em 'localhost:" + this.rmiPort);
         } catch (RemoteException re) {
             
             // caso não seja possível criar uma referência para o registo tentar localiza-lo
-            try {
-                registry = LocateRegistry.getRegistry(port);
-            } catch (RemoteException e) {
-
-                System.out.println("Erro: Nao foi possivel criar o registo em 'localhost:" + port + "/" + endpoint + "'");
-                return false;
-            }
+            log.error(toString(), "Nao foi possivel criar o registo em 'localhost:" + this.rmiPort + "/" + this.rmiEndpoint + "'");
+            return false;
         }
 
         // tentar registar o Barrel no endpoint atribuido
         try {
-            registry.bind(endpoint, barrel);
-            System.out.println("Barrel registado em 'localhost:" + port + "/" + endpoint + "'");
+            registry.bind(this.rmiEndpoint, this);
+            log.info(toString(), "Barrel registado em 'localhost:" + this.rmiPort + "/" + this.rmiEndpoint + "'");
 
         } catch (AlreadyBoundException e) {
-            System.out.println("Erro: 'localhost:" + port + "/" + endpoint + "' ja foi atribuido!");
+            log.error(toString(), "'localhost:" + this.rmiPort + "/" + this.rmiEndpoint + "' ja foi atribuido!");
 
         } catch (RemoteException e) {
-            System.out.println("Erro: Ocorreu um erro a registar o Barrel em 'localhost:" + port + "/" + endpoint + "'");
+            log.error(toString(), "Ocorreu um erro a registar o Barrel em 'localhost:" + this.rmiPort + "/" + this.rmiEndpoint + "'");
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Tenta remover o objeto do RMI runtime
+     * @return true caso consiga; false caso contrario
+     */
+    private boolean unexport(){
+
+        try {
+            return UnicastRemoteObject.unexportObject(this, true);
+        } catch (NoSuchObjectException e){
+            System.out.println("Erro: Ocorreu um erro ao remover o objeto do RMI runtime!");
+        }
+        return false;
+
     }
 
     /**
@@ -137,7 +157,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
         }
 
         // tentar registar o barrel
-        if (!register(rmiPort, rmiEndpoint, barrel)) {
+        if (!barrel.register()) {
+            barrel.unexport();
             return;
         }
 
