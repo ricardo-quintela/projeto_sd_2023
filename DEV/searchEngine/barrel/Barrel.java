@@ -3,14 +3,27 @@ package searchEngine.barrel;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
+import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import java.net.DatagramPacket;
+
+import java.net.MulticastSocket;
+import java.net.NetworkInterface;
+import java.net.InetSocketAddress;
+
 import searchEngine.utils.Log;
 
-public class Barrel extends UnicastRemoteObject implements QueryIf {
+public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
+
+    private MulticastSocket multicastSocket;
+    private String multicastAddress;
+    private int multicastPort;
+
+    private Thread multicastThread;
 
     private int rmiPort;
     private String rmiEndpoint;
@@ -20,10 +33,21 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
     /**
      * Construtor por omissão da classe {@code Barrel}
      */
-    public Barrel(int rmiPort, String rmiEndpoint) throws RemoteException {
+    public Barrel(int rmiPort, String rmiEndpoint, String multicastAddress, int multicastPort) throws RemoteException {
         this.rmiPort = rmiPort;
         this.rmiEndpoint = rmiEndpoint;
         this.log = new Log();
+
+        try{
+            this.multicastSocket = new MulticastSocket(multicastPort);
+            this.multicastAddress = multicastAddress;
+            this.multicastPort = multicastPort;
+            this.multicastThread = new Thread(this);
+            this.multicastThread.start();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
     }
 
     /**
@@ -31,6 +55,40 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
      */
     public Barrel() throws RemoteException {
         this.log = new Log();
+    }
+
+    public void run() {
+        System.out.println("Entrou");
+        try {
+
+
+            InetSocketAddress group = new InetSocketAddress(this.multicastAddress, this.multicastPort);
+            NetworkInterface netIf = NetworkInterface.getByName("bgc0");
+
+            this.multicastSocket.joinGroup(group, netIf);
+
+            while(true){
+
+                DatagramPacket message = this.receiveMessage();
+
+                if (message != null) {
+                    System.out.println(message.getData());
+                }
+
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e){
+            e.printStackTrace();
+        } catch (SecurityException e){
+            e.printStackTrace();
+        } catch (NullPointerException e){
+            e.printStackTrace();
+        } finally {
+            this.multicastSocket.close();
+        }
+        return;
     }
 
     @Override
@@ -46,6 +104,22 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
         return this + ": " + string;
     }
 
+
+    public DatagramPacket receiveMessage(){
+
+        byte[] buffer = new byte[1024];
+        DatagramPacket packet_received = new DatagramPacket(buffer, buffer.length);
+        
+        try {
+            this.multicastSocket.receive(packet_received);
+        
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return packet_received;
+    }
 
     /**
      * Tenta criar o registo RMI
@@ -150,7 +224,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf {
         Barrel barrel;
 
         try {
-            barrel = new Barrel(rmiPort, rmiEndpoint);
+            barrel = new Barrel(rmiPort, rmiEndpoint, "", 0);
         } catch (RemoteException e) {
             System.out.println("Erro: Ocorreu um erro ao criar o Barrel!");
             return;

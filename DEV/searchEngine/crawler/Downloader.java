@@ -97,6 +97,7 @@ public class Downloader {
 
 
         System.out.println(wordIndex);
+        this.sendMessage(wordIndex.toString());
     }
 
 
