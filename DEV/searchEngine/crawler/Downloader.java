@@ -6,9 +6,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import searchEngine.URLs.UrlQueueInterface;
+import searchEngine.utils.Log;
 
 import java.io.IOException;
-import java.util.Scanner;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
 import java.rmi.AccessException;
@@ -24,22 +29,36 @@ public class Downloader {
 
     private int queuePort;
     private String queueEndpoint;
+    private Log log;
+
+    private MulticastSocket multicastSocket;
+    private String multicastAddress;
+    private int multicastPort;
+
 
 
     /**
      * Construtor por omissão da classe Downloader
      */
-    public Downloader(){
+    public Downloader() throws IOException{
+        this.multicastSocket = new MulticastSocket();
     }
 
     /**
      * Construtor da classe Downloader
      * @param queuePort a porta da fila de URLs
      * @param queueEndpoint o endpoint da fila de URLs
+     * @throws IOException caso ocorra um erro a criar o MulticastSocket
      */
-    public Downloader(int queuePort, String queueEndpoint){
+    public Downloader(int queuePort, String queueEndpoint, String multicastAddress, int multicastPort) throws IOException{
         this.queuePort = queuePort;
         this.queueEndpoint = queueEndpoint;
+
+        this.log = new Log();
+
+        this.multicastSocket = new MulticastSocket();
+        this.multicastAddress = multicastAddress;
+        this.multicastPort = multicastPort;
     }
     
     
@@ -87,35 +106,93 @@ public class Downloader {
     }
 
 
+
+    /**
+     * Tenta enviar a mensagem fornecida para o grupo multicast
+     * @param message a mensagem para enviar por multicast
+     * @return true caso a mensagem seja enviada; false caso contrário
+     */
+    public boolean sendMessage(String message){
+
+        InetAddress multicastGroup;
+        byte[] buffer;
+        
+        try {
+            multicastGroup = InetAddress.getByName(this.multicastAddress);
+        } catch (UnknownHostException e){
+            this.log.error(toString(), "Nao foi possivel encontrar '" + this.multicastAddress + "'!");
+            return false;
+        } catch (SecurityException e){
+            this.log.error(toString(), "Um SecurityManager nao permitiu a ligacao a '" + this.multicastAddress + "'!");
+            return false;
+        }
+        
+        buffer = message.getBytes();
+        
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, multicastGroup, this.multicastPort);
+        
+        
+        try {
+            this.multicastSocket.send(packet);
+        } catch (IOException e){
+            this.log.error(toString(), "Um SecurityManager nao permitiu o envio de um pacote para '" + this.multicastAddress + "'!");
+            return false;
+        }
+
+
+        return true;
+
+    }
+
+
+
+
+    /**
+     * Fetcha a socket multicast
+     */
+    public void closeSocket(){
+        this.multicastSocket.close();
+    }
+
+
     /**
      * Imprime no {@code stdin} o modo de uso do programa
      */
     private static void printUsage() {
-        System.out.println("Modo de uso:\nDownloader {rmi_port} {rmi_endpoint}\n- rmi_port: Porto da fila de URLs\n-rmi_endpoint: Endpoint da fila de URLs");
+        System.out.println(
+            "Modo de uso:\nDownloader {rmi_port} {rmi_endpoint} {multicast_ip} {multicast_port}\n- rmi_port: Porto da fila de URLs\n-rmi_endpoint: Endpoint da fila de URLs\n- multicast_ip: O ip para qual vao ser transmitidas mensagens por multicast\n- multicast_port: O porto para onde as mensagens vao ser enviadas no Host de multicast"
+            );
     }
 
 
     public static void main(String args[]) {
 
         // tratamento de parâmetros
-        if (args.length != 2){
+        if (args.length != 4){
             printUsage();
             return;
         }
 
         // parsing dos parametros
-        int rmi_port;
+        int rmiPort, multicastPort;
         try{
-            rmi_port = Integer.parseInt(args[0]);
+            rmiPort = Integer.parseInt(args[0]);
+            multicastPort = Integer.parseInt(args[3]);
         } catch (NumberFormatException e){
             printUsage();
             return;
         }
 
-        Downloader downloader = new Downloader(rmi_port, args[1]);
+        // instanciar um downloader
+        Downloader downloader;
+        try {
+            downloader = new Downloader(rmiPort, args[1], args[2], multicastPort);
+        } catch (IOException e){
+            System.out.println("ERRO: Ocorreu um erro a criar o socket Multicast!");
+            return;
+        }
 
         UrlQueueInterface queue;
-
         try{
 
             // ligar ao server registado no rmiEndpoint fornecido
@@ -141,17 +218,10 @@ public class Downloader {
             System.out.println("Erro: Não foi possível encontrar o registo");
             return;
         }
+        
 
-        // // instanciar um scanner
-        // Scanner sc = new Scanner(System.in);
-
-        // System.out.print("Insira um URL >>>");
-
-        // String url = sc.nextLine();
-
-        // downloader.extractWords(url);
-
-        // sc.close();
+        
+        downloader.closeSocket();
 
     }
 
