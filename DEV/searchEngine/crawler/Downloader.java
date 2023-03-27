@@ -89,11 +89,13 @@ public class Downloader {
 
     public static void main(String args[]) {
 
+        // tratamento de parâmetros
         if (args.length != 2){
             printUsage();
             return;
         }
 
+        // parsing dos parametros
         int rmi_port;
         try{
             rmi_port = Integer.parseInt(args[0]);
