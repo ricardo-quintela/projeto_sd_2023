@@ -14,7 +14,6 @@ import java.rmi.registry.Registry;
 import searchEngine.barrel.QueryIf;
 import searchEngine.fileWorker.TextFileWorker;
 import searchEngine.utils.Log;
-import searchEngine.utils.TratamentoStrings;
 import searchEngine.URLs.UrlQueueInterface;
 
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
