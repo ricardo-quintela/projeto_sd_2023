@@ -8,8 +8,6 @@ import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
-import searchEngine.utils.TratamentoStrings;
-import searchEngine.URLs.UrlQueueInterface;
 import searchEngine.search.SearchResponse;
 
 public class Client{
