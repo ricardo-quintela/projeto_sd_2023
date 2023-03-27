@@ -279,20 +279,5 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return;
         }
 
-
-        // try{
-
-        // } catch (NotBoundException e) {
-        //     System.out.println("Erro: não existe um servidor registado no endpoint '" + searchModule.rmiEndpointQueue + "'!");
-        //     return;
-        // } catch (AccessException e) {
-        //     System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + searchModule.rmiEndpointQueue + "'!");
-        //     return;
-        // } catch (RemoteException e) {
-        //     System.out.println("Erro: Não foi possível encontrar o registo");
-        //     return;
-        // }
-
-        // searchModule.unexport();
     }
 }

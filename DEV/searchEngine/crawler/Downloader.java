@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
@@ -103,6 +102,7 @@ public class Downloader {
 
 
         System.out.println(wordIndex);
+        this.sendMessage(wordIndex.toString());
     }
 
 
