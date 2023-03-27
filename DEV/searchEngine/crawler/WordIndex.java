@@ -28,8 +28,10 @@ public class WordIndex {
             return;
         }
 
-        this.hashMap.put(key, new HashSet<>()).add(value);
+        HashSet<String> hashSet = new HashSet<>();
+        hashSet.add(value);
 
+        hashSet = this.hashMap.put(key, hashSet);
     }
 
 
@@ -40,7 +42,7 @@ public class WordIndex {
         // iterar pelas palavras guardadas no INDEX de URLS
         int i = 0, j;
         for (String key : this.hashMap.keySet()) {
-            string = string + " ; item_" + i + "_" + key + " | "; // item_I_palavra | url1, url2
+            string = string + "; item_" + i + "_" + key + " | "; // item_I_palavra | url1, url2
             
             // iterar pelos URL da palavra selecionada
             j = 0;
