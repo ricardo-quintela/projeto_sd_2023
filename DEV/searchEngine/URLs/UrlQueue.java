@@ -1,6 +1,7 @@
 package searchEngine.URLs;
 
-import java.util.*;
+// import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.AlreadyBoundException;
@@ -8,7 +9,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
-    private LinkedList<String> urls;
+    private CopyOnWriteArrayList<String> urls;
     
     private int rmiPort;
     private String rmiEndpoint;
@@ -18,7 +19,7 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
      * @throws RemoteException
      */
     public UrlQueue(int rmiPort, String rmiEndpoint) throws RemoteException {
-        urls = new LinkedList<String>();
+        urls = new CopyOnWriteArrayList<String>();
         this.rmiPort = rmiPort;
         this.rmiEndpoint = rmiEndpoint;
     }
@@ -39,7 +40,7 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
      * @throws RemoteException
      */
     public String remove() throws RemoteException {
-        String url = urls.removeFirst();
+        String url = urls.remove(urls.size()-1);
         System.out.println("Url removida da fila: " + url);
         return url;
     }
@@ -99,6 +100,10 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
         return true;
     }
 
+    private static void printUsage() {
+        System.out.println("Modo de uso:\nUrlQueue {rmi_port} {rmi_endpoint}\n- rmi_port: Porta do registo RMI da UrlQueue\n- rmi_endpoint: Endpoint da UrlQueue no registo RMI");
+    }
+
     @Override
     public String toString() {
         return "UrlQueue@localhost:" + this.rmiPort + "/" + this.rmiEndpoint;
@@ -108,29 +113,21 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     public static void main(String[] args) {
 
         // tratamento de erros nos parâmetros
-        if (args.length == 0) {
-            System.out.println("Erro nos parametros");
-            return;
-        }
-        if (args.length > 2) {
-            System.out.println("Erro nos parametros");
+        if (args.length != 2) {
+            printUsage();
             return;
         }
 
         int rmiPort = -1;
         String rmiEndpoint;
 
-        if (args.length == 2) {
-            try {
-                rmiPort = Integer.parseInt(args[0]);
-            } catch (NumberFormatException e) {
-                System.out.println("NumberFormatException");
-                return;
-            }
-            rmiEndpoint = args[1];
-        } else {
-            rmiEndpoint = args[0];
+        try {
+            rmiPort = Integer.parseInt(args[0]);
+        } catch (NumberFormatException e) {
+            System.out.println("NumberFormatException");
+            return;
         }
+        rmiEndpoint = args[1];
 
         // política e segurança
         System.getProperties().put("java.security.policy", "policy.all");
