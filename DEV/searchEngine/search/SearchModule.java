@@ -241,5 +241,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return;
         }
 
+        searchModule.unexport();
+
     }
 }
