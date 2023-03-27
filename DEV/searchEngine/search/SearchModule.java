@@ -155,6 +155,13 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     }
 
+
+    public String execURL(String name) throws RemoteException{
+        System.out.println(name);
+        return null;
+    }
+
+    
     /**
      * Tenta criar o registo RMI próprio do {@code SearchModule}
      * 
