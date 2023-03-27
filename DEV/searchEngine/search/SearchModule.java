@@ -264,11 +264,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             // ligar ao server da fila de urls registado no rmiEndpoint fornecido
             UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(searchModule.rmiPortQueue).lookup(searchModule.rmiEndpointQueue);
 
-            System.out.println(urlqueue.isEmpty());
-            urlqueue.add("url1");
-            System.out.println(urlqueue.isEmpty());
-            System.out.println(urlqueue.get(0));
-
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + searchModule.rmiEndpointQueue + "'!");
             return;
