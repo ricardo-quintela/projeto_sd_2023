@@ -292,5 +292,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         //     System.out.println("Erro: Não foi possível encontrar o registo");
         //     return;
         // }
+
+        searchModule.unexport();
     }
 }
