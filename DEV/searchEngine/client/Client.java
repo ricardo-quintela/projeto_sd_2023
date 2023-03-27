@@ -28,7 +28,6 @@ public class Client{
         this.name = name;
     }
 
-
     /**
      * Pede ao utilizador por uma string de palavras chave para pesquisar
      * @param sc o {@code Scanner} de input ligado ao {@code stdin}
@@ -74,6 +73,47 @@ public class Client{
         }
     }
 
+    /**
+     * Pede ao utilizador um URL e envia ao SearchModule para pesquisar.
+     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
+     */
+    public void sendURL(Scanner sc, SearchResponse searchModuleIF){
+
+        String response;
+
+        while (true){
+
+            System.out.print("Googol - Pesquisa\nDigite um url para pesquisar e '/back' para voltar atras.\nDigite: ");
+            
+            // ler uma linha do stdin
+            String query = sc.nextLine();
+            
+            // voltar atrás no menu
+            if (query.equals("/back")){
+                break;
+            }
+
+            // pedir a um barrel para executar a query
+            try {
+
+                response = searchModuleIF.execURL(query);
+
+                // caso o pedido não possa ser executado
+                if (response == null){
+                    System.out.println("Erro: Nao houve resposta para o pedido!");
+                    continue;
+                }
+
+            } catch (RemoteException e) {
+                System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
+                continue;
+            }
+
+            // imprimir a resposta recebida
+            System.out.println(response);
+
+        }
+    }
 
     /**
      * Menu de utilizador
@@ -95,7 +135,7 @@ public class Client{
 
                     // indexar um URL
                     case 1:
-                        System.out.println("Indexar um URL foi selecionado\n");
+                        this.sendURL(sc, searchModuleIF);
                         break;
 
                     // pesquisar
