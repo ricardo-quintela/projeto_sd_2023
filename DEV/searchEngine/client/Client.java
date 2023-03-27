@@ -8,7 +8,6 @@ import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import searchEngine.search.SearchResponse;
 
 public class Client{
@@ -161,6 +160,12 @@ public class Client{
 
             // ligar ao server registado no rmiEndpoint fornecido
             searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(port).lookup(rmiEndpoint);
+
+            // UrlQueueInterface ligacaoUrlQueue = (UrlQueueInterface) Naming.lookup(TratamentoStrings.urlTratamento(port, rmiEndpoint));
+            // System.out.println(ligacaoUrlQueue.isEmpty());
+            // ligacaoUrlQueue.add("url1");
+            // System.out.println(ligacaoUrlQueue.isEmpty());
+            // System.out.println(ligacaoUrlQueue.get(0));
 
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + rmiEndpoint + "'!");

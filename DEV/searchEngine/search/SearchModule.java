@@ -14,6 +14,8 @@ import java.rmi.registry.Registry;
 import searchEngine.barrel.QueryIf;
 import searchEngine.fileWorker.TextFileWorker;
 import searchEngine.utils.Log;
+import searchEngine.utils.TratamentoStrings;
+import searchEngine.URLs.UrlQueueInterface;
 
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
@@ -25,6 +27,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     private ArrayList<String> barrel_endpoints;
     private int rmiPort;
     private String rmiEndpoint;
+    private int rmiPortQueue;
+    private String rmiEndpointQueue;
 
     private Log log;
 
@@ -53,7 +57,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         TextFileWorker fileWorker = new TextFileWorker(path);
         ArrayList<String> lines = fileWorker.read();
 
-        // ler a porta RMI do SearchModule e depois dos Barrels
+        // ler a porta RMI e endpoint do SearchModule
         try {
             this.rmiPort = Integer.parseInt(lines.get(0).split("/")[0]);
             this.rmiEndpoint = lines.get(0).split("/")[1];
@@ -65,10 +69,23 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return false;
         }
 
+        // ler porta RMI e endpoint da fila de urls
+        try {
+            this.rmiPortQueue = Integer.parseInt(lines.get(1).split("/")[0]);
+            this.rmiEndpointQueue = lines.get(1).split("/")[1];
+        } catch (NumberFormatException e){
+            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'!\n Nao foi possivel carregar a porta da Fila!");
+            return false;
+        } catch (IndexOutOfBoundsException e){
+            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Ficheiro esta vazio!");
+            return false;
+        }
+
+        // ler porta RMI e endpoint dos Barrels
         try{
 
             // adiciona os portos e os endpoints às suas respetivas listas
-            for (int i = 1; i < lines.size(); i++) {
+            for (int i = 2; i < lines.size(); i++) {
                 this.barrel_ports.add(Integer.parseInt(lines.get(i).split("/")[0]));
                 this.barrel_endpoints.add(lines.get(i).split("/")[1]);
             }
@@ -241,5 +258,21 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return;
         }
 
+
+        try{
+
+            // ligar ao server da fila de urls registado no rmiEndpoint fornecido
+            UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(searchModule.rmiPortQueue).lookup(searchModule.rmiEndpointQueue);
+
+        } catch (NotBoundException e) {
+            System.out.println("Erro: não existe um servidor registado no endpoint '" + searchModule.rmiEndpointQueue + "'!");
+            return;
+        } catch (AccessException e) {
+            System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + searchModule.rmiEndpointQueue + "'!");
+            return;
+        } catch (RemoteException e) {
+            System.out.println("Erro: Não foi possível encontrar o registo");
+            return;
+        }
     }
 }
