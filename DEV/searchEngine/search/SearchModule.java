@@ -14,7 +14,6 @@ import java.rmi.registry.Registry;
 import searchEngine.barrel.QueryIf;
 import searchEngine.fileWorker.TextFileWorker;
 import searchEngine.utils.Log;
-import searchEngine.utils.TratamentoStrings;
 import searchEngine.URLs.UrlQueueInterface;
 
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
@@ -155,6 +154,28 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     }
 
+
+    public String execURL(String name) throws RemoteException{
+        
+        try {
+            // ligar ao server da fila de urls registado no rmiEndpoint fornecido
+            UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(this.rmiPortQueue).lookup(this.rmiEndpointQueue);
+            urlqueue.add(name);
+        } catch (NotBoundException e) {
+            System.out.println("Erro: não existe um servidor registado no endpoint '" + this.rmiEndpointQueue + "'!");
+            return null;
+        } catch (AccessException e) {
+            System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + this.rmiEndpointQueue + "'!");
+            return null;
+        } catch (RemoteException e) {
+            System.out.println("Erro: Não foi possível encontrar o registo");
+            return null;
+        }
+        
+        return null;
+    }
+
+    
     /**
      * Tenta criar o registo RMI próprio do {@code SearchModule}
      * 
@@ -259,20 +280,17 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         }
 
 
-        try{
+        // try{
 
-            // ligar ao server da fila de urls registado no rmiEndpoint fornecido
-            UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(searchModule.rmiPortQueue).lookup(searchModule.rmiEndpointQueue);
-
-        } catch (NotBoundException e) {
-            System.out.println("Erro: não existe um servidor registado no endpoint '" + searchModule.rmiEndpointQueue + "'!");
-            return;
-        } catch (AccessException e) {
-            System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + searchModule.rmiEndpointQueue + "'!");
-            return;
-        } catch (RemoteException e) {
-            System.out.println("Erro: Não foi possível encontrar o registo");
-            return;
-        }
+        // } catch (NotBoundException e) {
+        //     System.out.println("Erro: não existe um servidor registado no endpoint '" + searchModule.rmiEndpointQueue + "'!");
+        //     return;
+        // } catch (AccessException e) {
+        //     System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + searchModule.rmiEndpointQueue + "'!");
+        //     return;
+        // } catch (RemoteException e) {
+        //     System.out.println("Erro: Não foi possível encontrar o registo");
+        //     return;
+        // }
     }
 }

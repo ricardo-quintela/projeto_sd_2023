@@ -19,4 +19,17 @@ public interface SearchResponse extends Remote {
      * @throws RemoteException caso haja um erro no RMI
      */
     public String execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException;
+
+
+    /**
+     * Envia um URL para ser adicionado na fila de URLs
+     * 
+     * <br>
+     * 
+     * @param name o nome do cliente
+     * @param query a lista de palavras-chave
+     * @return uma {@code String} contendo um URL
+     * @throws RemoteException caso haja um erro no RMI
+     */
+    public String execURL(String name) throws RemoteException;
 }
