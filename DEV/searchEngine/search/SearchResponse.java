@@ -28,8 +28,8 @@ public interface SearchResponse extends Remote {
      * 
      * @param name o nome do cliente
      * @param query a lista de palavras-chave
-     * @return uma {@code String} contendo um URL
+     * @return true caso o URL seja adicionado à fila; false caso contrário
      * @throws RemoteException caso haja um erro no RMI
      */
-    public String execURL(String name) throws RemoteException;
+    public boolean execURL(String name) throws RemoteException;
 }

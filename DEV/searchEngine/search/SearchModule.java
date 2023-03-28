@@ -155,7 +155,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     }
 
 
-    public String execURL(String name) throws RemoteException{
+    public boolean execURL(String name) throws RemoteException{
         
         try {
             // ligar ao server da fila de urls registado no rmiEndpoint fornecido
@@ -163,16 +163,16 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             urlqueue.add(name);
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + this.rmiEndpointQueue + "'!");
-            return null;
+            return false;
         } catch (AccessException e) {
             System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + this.rmiEndpointQueue + "'!");
-            return null;
+            return false;
         } catch (RemoteException e) {
             System.out.println("Erro: Não foi possível encontrar o registo");
-            return null;
+            return false;
         }
         
-        return null;
+        return true;
     }
 
     
@@ -279,20 +279,5 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return;
         }
 
-
-        // try{
-
-        // } catch (NotBoundException e) {
-        //     System.out.println("Erro: não existe um servidor registado no endpoint '" + searchModule.rmiEndpointQueue + "'!");
-        //     return;
-        // } catch (AccessException e) {
-        //     System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + searchModule.rmiEndpointQueue + "'!");
-        //     return;
-        // } catch (RemoteException e) {
-        //     System.out.println("Erro: Não foi possível encontrar o registo");
-        //     return;
-        // }
-
-        // searchModule.unexport();
     }
 }

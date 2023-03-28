@@ -78,8 +78,6 @@ public class Client{
      */
     public void sendURL(Scanner sc, SearchResponse searchModuleIF){
 
-        String response;
-
         while (true){
 
             System.out.print("Googol - Pesquisa\nDigite um url para pesquisar e '/back' para voltar atras.\nDigite: ");
@@ -95,21 +93,17 @@ public class Client{
             // pedir a um barrel para executar a query
             try {
 
-                response = searchModuleIF.execURL(query);
-
-                // caso o pedido não possa ser executado
-                if (response == null){
-                    System.out.println("Erro: Nao houve resposta para o pedido!");
+                if (searchModuleIF.execURL(query)){
+                    System.out.println("Sucesso! '" + query + "' foi adicionado a fila!");
+                } else {
+                    System.out.println("Erro: Nao foi possivel adicionar o URL a fila!");
                     continue;
                 }
 
             } catch (RemoteException e) {
-                System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
+                System.out.println("Erro: Ocorreu um erro do servidor ao enviar o URL!");
                 continue;
             }
-
-            // imprimir a resposta recebida
-            System.out.println(response);
 
         }
     }
