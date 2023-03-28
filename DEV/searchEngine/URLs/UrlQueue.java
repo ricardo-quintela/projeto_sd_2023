@@ -3,6 +3,9 @@ package searchEngine.URLs;
 // import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import searchEngine.utils.Log;
+
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.AlreadyBoundException;
@@ -14,22 +17,31 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     
     private int rmiPort;
     private String rmiEndpoint;
+    private Log log;
+
 
     /**
-     * Construtor da UrlQueue
-     * @throws RemoteException
+     * Construtor por omissão da classe UrlQueue
+     * @throws RemoteException caso ocorra um erro no RMI
+     */
+    public UrlQueue() throws RemoteException{
+        this.urls = new LinkedBlockingQueue<String>();
+    }
+
+    /**
+     * Construtor da classe UrlQueue
+     * @param rmiPort o porto onde criar o registo RMI
+     * @param rmiEndpoint o endpoint do RMI onde registar a fila
+     * @throws RemoteException caso ocorra um erro no RMI
      */
     public UrlQueue(int rmiPort, String rmiEndpoint) throws RemoteException {
-        urls = new LinkedBlockingQueue<String>();
+        this.urls = new LinkedBlockingQueue<String>();
         this.rmiPort = rmiPort;
         this.rmiEndpoint = rmiEndpoint;
+        this.log = new Log();
     }
     
-    /** 
-     * Addicona um url ao ultimo elemento da UrlQueue
-     * @param url Url que vai ser adicionado a UrlQueue
-     * @throws RemoteException
-     */
+
     public void add(String url) throws RemoteException {
         System.out.println("Url adicionado à fila: " + url);
         try {
@@ -39,26 +51,18 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
         }
     }
 
-    /** 
-     * Remove o primeiro elemento da UrlQueue
-     * @return String elemento eliminado da UrlQueue
-     * @throws RemoteException
-     */
-    public String remove() throws RemoteException {
+
+    public String remove(String downloader) throws RemoteException {
         try {
             String url = urls.take();
-            System.out.println("Url removida da fila: " + url);
+            this.log.error(toString(), "Url removida da fila por " + downloader + ": " + url);
             return url;
         } catch (InterruptedException e) {
+            this.log.error(toString(), "Registo estava interrompido");
             return null;
         }
     }
 
-    /** 
-     * Verifica se a UrLQueue esta vazia
-     * @return boolean true se a UrlQueue nao tiver elementos
-     * @throws RemoteException
-     */
     public boolean isEmpty() throws RemoteException {
         return urls.isEmpty();
     }
@@ -99,6 +103,9 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
         return true;
     }
 
+    /**
+     * Imprime a mensagem de uso da fila de URLs
+     */
     private static void printUsage() {
         System.out.println("Modo de uso:\nUrlQueue {rmi_port} {rmi_endpoint}\n- rmi_port: Porta do registo RMI da UrlQueue\n- rmi_endpoint: Endpoint da UrlQueue no registo RMI");
     }
