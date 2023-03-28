@@ -4,9 +4,17 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import searchEngine.URLs.UrlQueueInterface;
+
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.StringTokenizer;
+
+import java.rmi.AccessException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 
 /**
  * Um downloader analisa páginas da web e retira as palavras das mesmas
@@ -106,16 +114,44 @@ public class Downloader {
 
         Downloader downloader = new Downloader(rmi_port, args[1]);
 
-        // instanciar um scanner
-        Scanner sc = new Scanner(System.in);
+        UrlQueueInterface queue;
 
-        System.out.print("Insira um URL >>>");
+        try{
 
-        String url = sc.nextLine();
+            // ligar ao server registado no rmiEndpoint fornecido
+            queue = (UrlQueueInterface) LocateRegistry.getRegistry(downloader.queuePort).lookup(downloader.queueEndpoint);
 
-        downloader.extractWords(url);
+            // Para remover quando a cena do scan for arranjada
+            System.out.print(queue.remove());
 
-        sc.close();
+            while (true) {
+                String url = queue.remove();
+                System.out.println(url);
+
+                downloader.extractWords(url);
+            }
+            
+        } catch (NotBoundException e) {
+            System.out.println("Erro: não existe um servidor registado no endpoint '" + downloader.queueEndpoint + "'!");
+            return;
+        } catch (AccessException e) {
+            System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + downloader.queueEndpoint + "'!");
+            return;
+        } catch (RemoteException e) {
+            System.out.println("Erro: Não foi possível encontrar o registo");
+            return;
+        }
+
+        // // instanciar um scanner
+        // Scanner sc = new Scanner(System.in);
+
+        // System.out.print("Insira um URL >>>");
+
+        // String url = sc.nextLine();
+
+        // downloader.extractWords(url);
+
+        // sc.close();
 
     }
 
