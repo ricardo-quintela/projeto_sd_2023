@@ -5,6 +5,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import searchEngine.URLs.UrlQueueInterface;
 import searchEngine.utils.Log;
 
@@ -35,6 +38,8 @@ public class Downloader {
     private MulticastSocket multicastSocket;
     private String multicastAddress;
     private int multicastPort;
+
+    private BlockingQueue<String> urls;
 
 
 
@@ -68,6 +73,8 @@ public class Downloader {
         this.multicastSocket = new MulticastSocket();
         this.multicastAddress = multicastAddress;
         this.multicastPort = multicastPort;
+
+        this.urls = new LinkedBlockingQueue<>();
     }
 
 
@@ -120,6 +127,12 @@ public class Downloader {
             Elements links = doc.select("a[href]");
             
             for (Element link : links) {
+
+                // Voltar a pôr os links na querry para eles também serem procurados
+                if (!this.urls.contains(url)){
+                    this.urls.add(url);
+                }
+
                 System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
             }
         
@@ -200,7 +213,6 @@ public class Downloader {
         while (this.getRunning()) {
             try {
 
-
                 this.log.info(toString(), "Procurando outro URL em 'localhost:" + this.queuePort + "/" + this.queueEndpoint + "'...");
                 url = queue.remove(toString());
 
@@ -208,6 +220,14 @@ public class Downloader {
                 
                 this.extractWords(url);
                 this.log.info(toString(), "'" + url + "'. Foi analisado.");
+
+                // iterar por todos os novos urls
+                for (String newUrl: this.urls) {
+                    this.extractWords(newUrl);
+                }
+
+                // limpamos todos os urls encontrados
+                this.urls.clear();
 
             } catch (IllegalArgumentException e) {
                 this.log.error(toString(), "O URL '" + url + "' esta num formato invalido!");
