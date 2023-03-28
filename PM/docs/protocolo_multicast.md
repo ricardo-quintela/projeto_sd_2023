@@ -1,26 +1,35 @@
-# Protocolo de reliable multicast a implementar
+# Protocolo Multicast a utilizar
 
-Barrels não pedem por indexação. Esse pedido é feito pelo SearchModule que coloca os URLs na fila de URLs.
+## Pré-requisitos
 
-Então o algoritmo pode ser o seguinte:
+Considera-se que um `Downloader` processa o URL-N.
+Considera-se que existem $M$ `Barrel`s.
 
-- Considera-se que um `Downloader` processou o *URL-X* e obteve todas as palavras;
-- O `Downloader` envia uma mensagem para o grupo multicast com o *ID-X*;
-- Um `Barrel` recebe a mensagem com *ID-X* e envia um "*ACK*";
-- O `Downloader` apenas para de enviar a mensagem quando receber um número de "*ACK*s" igual ao número de `Barrel`s ligados ao grupo multicast.
+## Cenário de sucesso
 
-# Problemas
+1. `Downloader` envia uma query para saber quantos `Barrel`s estão ligados ao grupo com o tamanho da mensagem a enviar (`SIN_N_SIZE`)
+2. `Barrel`-X recebe a query e aloca `SIZE` bytes
+3. `Barrel`-X responde com uma confirmação que está pronto para receber (`SINACK_N`)
+4. `Downloader` recebe $W \in [0,M]$ confirmações (`SINACK`)
+5. `Downloader` envia a a mensagem $N$ até receber $W$ confirmações ou até $t$ segundos se passarem (*timeout*)
+6. `Barrel`-X recebe a mensagem $N$
+7. `Barrel`-X responde com uma confirmação de receção (`ACK_N`)
 
-1. Como é que um downloader sabe quantos `Barrel`s estão ligados ao grupo multicast?
+## Cenário em que há uma falha
 
-2. E se o `Downloader` pensar que há *N* `Barrel`s ligados e na verdade um deles estiver avariado?
+Considera-se que `Barrel`-Y não recebeu a mensagem $N$.
 
-## Solução para 1 e 2
-
-- Antes de enviar a mensagem, o `Downloader` envia um "*SIN*" para o grupo multicast com o *ID-X* (o ID da mensagem a enviar);
-- Os `Barrel`s recebem o "*SIN*" com o *ID-X* e enviam um "*SINACK*" para confirmar que estão no grupo multicast;
-- O `Downloader` considera que tem o grupo tem *N* `Barrel`s ligados ao grupo porque recebeu *N* "*SINACK*s"
-
-Desta maneira o problema 2 mantém-se. Para o resolver basta considerar um timeout para o pedido ser cancelado.
-
-3. E se um `Barrel` não tiver recebido a mensagem *N* quando o `Downloader` enviar a mensagem *N+1*? O que acontece? O `Barrel` perde a mensagem ou tem de a pedir de novo? Se tiver de a pedir de novo como é que o `Downloader` sabe qual o URL que a mensagem referia?
+1. `Downloader` envia uma query para saber quantos `Barrel`s estão ligados ao grupo com o tamanho da mensagem a enviar (`SIN_N+P_SIZE`)
+2. `Barrel`-X recebe a query e aloca `SIZE` bytes
+3. `Barrel`-X responde com uma confirmação que está pronto para receber (`SINACK_N+P`)
+4. `Barrel`-Y entende que não recebeu as mensagens $m \in [N, N+P-1]$
+a. `Barrel`-Y pede a outros Barrels através do mesmo grupo multicast pelas mensagens $m \in [N, N+P-1]$
+b. `Barrel`-X que recebeu $m \in [N, N+P-1]$ responde com o conteúdo das mesmas
+c. `Barrel`-Y atualiza a sua base de dados
+6. `Barrel`-Y responde com uma confirmação que está pronto para receber (`SINACK_N+P`)
+7. `Downloader` recebe $W \in [0,M]$ confirmações (`SINACK`)
+8. `Downloader` envia a a mensagem $N+P$ até receber W confirmações ou até $t$ segundos se passarem (*timeout*)
+9. `Barrel`-X recebe a mensagem $N+P$
+10. `Barrel`-X responde com uma confirmação de receção (`ACK_N+P`)
+11. `Barrel`-Y recebe a mensagem $N+P$
+12. `Barrel`-Y responde com uma confirmação de receção (`ACK_N+P`)
