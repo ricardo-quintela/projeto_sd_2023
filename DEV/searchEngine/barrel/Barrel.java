@@ -73,6 +73,9 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
                 DatagramPacket message = this.receiveMessage();
 
+                // Se for uma procura para saber se os URL são conhecidos ou não
+                
+
                 if (message != null) {
                     System.out.println(message.getData());
                 }
