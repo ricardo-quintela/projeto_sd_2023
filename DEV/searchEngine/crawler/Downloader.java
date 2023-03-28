@@ -88,7 +88,7 @@ public class Downloader {
     }
     
     
-    public void extractWords(String url){
+    public void extractWords(String url, UrlQueueInterface urlQueue){
         
         // criar um mapa de palavras
         WordIndex wordIndex = new WordIndex();
@@ -206,7 +206,7 @@ public class Downloader {
 
                 this.log.info(toString(), "Recebido '" + url + "'. A extrair...");
                 
-                this.extractWords(url);
+                this.extractWords(url, queue);
                 this.log.info(toString(), "'" + url + "'. Foi analisado.");
 
             } catch (IllegalArgumentException e) {
