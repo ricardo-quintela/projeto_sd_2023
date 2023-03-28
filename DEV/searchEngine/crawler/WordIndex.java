@@ -35,6 +35,14 @@ public class WordIndex {
     }
 
 
+    /**
+     * Esvazia o indice de palavras
+     */
+    public void reset(){
+        this.hashMap.clear();
+    }
+
+
     @Override
     public String toString() {
         String string = "item_count | " + this.hashMap.size();

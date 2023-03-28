@@ -8,6 +8,7 @@ import org.jsoup.select.Elements;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import searchEngine.URLs.Url;
 import searchEngine.URLs.UrlQueueInterface;
 import searchEngine.utils.Log;
 
@@ -22,6 +23,9 @@ import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.time.Duration;
+import java.time.Instant;
+
 
 /**
  * Um downloader analisa páginas da web e retira as palavras das mesmas
@@ -41,6 +45,8 @@ public class Downloader {
 
     private BlockingQueue<String> urls;
 
+    private WordIndex wordIndex;
+
 
 
     /**
@@ -49,6 +55,7 @@ public class Downloader {
     public Downloader() throws IOException{
         this.running = true;
         this.multicastSocket = new MulticastSocket();
+        this.wordIndex = new WordIndex();
     }
 
     /**
@@ -70,11 +77,13 @@ public class Downloader {
 
         this.log = new Log();
 
-        this.multicastSocket = new MulticastSocket();
+        this.multicastSocket = new MulticastSocket(multicastPort);
         this.multicastAddress = multicastAddress;
         this.multicastPort = multicastPort;
 
         this.urls = new LinkedBlockingQueue<>();
+
+        this.wordIndex = new WordIndex();
     }
 
 
@@ -95,10 +104,7 @@ public class Downloader {
     }
     
     
-    public void extractWords(String url){
-        
-        // criar um mapa de palavras
-        WordIndex wordIndex = new WordIndex();
+    public boolean extractWords(String url){
 
         try {
             // ligar ao website
@@ -108,55 +114,72 @@ public class Downloader {
             StringTokenizer tokens = new StringTokenizer(doc.text());
 
             // array de tokens que vão ser separados de pontuação
-            String cleanedTokens[];
+            String cleanTokens[];
 
             while (tokens.hasMoreElements()){
 
-                cleanedTokens = tokens.nextToken().toLowerCase().split("[^a-zA-Z0-9]+");
+                // retirar pontuaçao dos tokens
+                cleanTokens = tokens.nextToken().toLowerCase().split("[^a-zA-Z0-9]+");
 
-                if (cleanedTokens.length == 0){
+                if (cleanTokens.length == 0){
                     continue;
                 }
 
-                for (int i = 0; i < cleanedTokens.length; i++){
-                    wordIndex.put(url, cleanedTokens[i]);
+                // adicionar palavras ao indice
+                for (int i = 0; i < cleanTokens.length; i++){
+                    this.wordIndex.put(url, cleanTokens[i]);
                 }
 
             }
             
+            // retirar as ligaçoes da pagina
             Elements links = doc.select("a[href]");
             
+            // iterar por todas as ligaçoes
             for (Element link : links) {
 
-                // Voltar a pôr os links na querry para eles também serem procurados
+                // Voltar a pôr os links na lista para eles também serem procurados
                 if (!this.urls.contains(link.attr("abs:href"))){
                     this.urls.add(link.attr("abs:href"));
                 }
 
+                // TODO: PRINT DE DEBUG
                 System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
             }
         
+        } catch (IllegalArgumentException e) {
+            this.log.error(toString(), "O URL '" + url + "' esta num formato invalido!");
+            return false;
+
         } catch (IOException e) {
             this.log.error(toString(), "Ocorreu um erro ao ligar a '" + url + "'!");
+            return false;
         }
 
-
-        System.out.println(wordIndex);
-        this.sendMessage(wordIndex.toString());
+        return true;
     }
 
 
 
     /**
      * Tenta enviar a mensagem fornecida para o grupo multicast
-     * @param message a mensagem para enviar por multicast
+     * @param urlIndex a mensagem para enviar por multicast
+     * @param urlId o id da mensagem a enviar
      * @return true caso a mensagem seja enviada; false caso contrário
      */
-    public boolean sendMessage(String message){
-
-        InetAddress multicastGroup;
-        byte[] buffer;
+    public boolean sendMessage(String urlIndex, int urlId){
         
+        InetAddress multicastGroup;
+        DatagramPacket sendPacket, rcvPacket;
+        Instant start, end;
+        String receivedMessage[];
+
+        //? 1 - SETUP
+
+        // buffer que recebe mensagens default de conexao
+        byte[] connectionBuffer;
+        
+        // criar um grupo multicast
         try {
             multicastGroup = InetAddress.getByName(this.multicastAddress);
         } catch (UnknownHostException e){
@@ -166,19 +189,116 @@ public class Downloader {
             this.log.error(toString(), "Um SecurityManager nao permitiu a ligacao a '" + this.multicastAddress + "'!");
             return false;
         }
-        
-        buffer = message.getBytes();
-        
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, multicastGroup, this.multicastPort);
-        
-        
+
+        // juntar ao grupo multicast
         try {
-            this.multicastSocket.send(packet);
+            this.multicastSocket.joinGroup(multicastGroup);
         } catch (IOException e){
-            this.log.error(toString(), "Um SecurityManager nao permitiu o envio de um pacote para '" + this.multicastAddress + "'!");
+            this.log.error(toString(), "Ocorreu um erro a juntar ao grupo multicast!");
             return false;
         }
 
+        // criar a mensagem
+        String message = "type | url_list; id | " + urlId + "; " + urlIndex;
+        byte[] messageBuffer = message.getBytes();
+        
+        
+        //? 2 - PEDIR PARA ENVIAR MENSAGEM
+        
+        // criar a mensagem heartbeat
+        String connectionMessage = "type | heartbeat; id | " + urlId + "; buff_size | " + messageBuffer.length;
+        connectionBuffer = connectionMessage.getBytes();
+        sendPacket = new DatagramPacket(connectionBuffer, connectionBuffer.length, multicastGroup, this.multicastPort);
+        
+        // enviar heartbeat
+        try {
+            this.multicastSocket.send(sendPacket);
+
+        } catch (IOException e) {
+            this.log.error(toString(), "Ocorreu um erro a iniciar conexao para '" + this.multicastAddress + "'!");
+        } catch (SecurityException e){
+            this.log.error(toString(), "Um SecurityManager nao permitiu o envio de um heartbeat para '" + this.multicastAddress + "'!");
+            return false;
+        }
+
+        //? 3 - RECEBER CONFIRMAÇÕES DE DISPONIBILIDADE
+
+        int multicastSubscriberCount = 0;
+        start = Instant.now();
+        end = Instant.now();
+        
+        // preparar um novo packet para receber confirmaçoes
+        connectionBuffer = new byte[50];
+        rcvPacket = new DatagramPacket(connectionBuffer, connectionBuffer.length);
+
+        // receber confirmações durante 2 segundos
+        while (Duration.between(start, end).compareTo(Duration.ofSeconds(2)) < 0){
+
+            // receber uma mensagem do grupo (BLOQUEANTE)
+            try {
+                this.multicastSocket.receive(rcvPacket);
+            } catch (IOException e) {
+                this.log.error(toString(), "Ocorreu um erro a receber uma confirmacao de heartbeat!");
+                continue;
+            }
+
+            // separar a mensagem por ";"
+            receivedMessage = (new String(rcvPacket.getData(), 0, rcvPacket.getLength())).split("; *");
+
+            // verificar se a mensagem é uma confirmaçao de heartbeat
+            if (receivedMessage.length > 0 && receivedMessage[0].equals("type | ready") && receivedMessage[1].equals("id | " + urlId)){
+                multicastSubscriberCount++;
+            }
+
+        }
+
+        //? 4 - ENVIAR A MENSAGEM PARA O GRUPO
+
+        // preparar um novo pacote para enviar o indice
+        sendPacket = new DatagramPacket(messageBuffer, messageBuffer.length, multicastGroup, this.multicastPort);
+        
+        // enviar a mensagem até ter atingido todas as confirmações ou ter enviado várias vezes
+        do {
+
+            // enviar o indice
+            try {
+                this.multicastSocket.send(sendPacket);
+    
+            } catch (IOException e) {
+                this.log.error(toString(), "Ocorreu um erro a enviar o indice para '" + this.multicastAddress + "'!");
+            } catch (SecurityException e){
+                this.log.error(toString(), "Um SecurityManager nao permitiu o envio do indice para '" + this.multicastAddress + "'!");
+                return false;
+            }
+
+            connectionBuffer = new byte[50];
+            rcvPacket = new DatagramPacket(connectionBuffer, connectionBuffer.length);
+
+
+            // receber uma mensagem do grupo (BLOQUEANTE)
+            try {
+                this.multicastSocket.receive(rcvPacket);
+            } catch (IOException e) {
+                this.log.error(toString(), "Ocorreu um erro a receber uma confirmacao de envio!");
+                continue;
+            }
+
+            // separar a mensagem por ";"
+            receivedMessage = (new String(rcvPacket.getData(), 0, rcvPacket.getLength())).split("; *");
+
+            // verificar se a mensagem é uma confirmaçao de heartbeat
+            if (receivedMessage.length > 0 && receivedMessage[0].equals("type | rcvd") && receivedMessage[1].equals("id | " + urlId)){
+                
+                // decrementar caso seja confirmaçao
+                multicastSubscriberCount--;
+            } else {
+
+                // incrementar caso nao seja para o caso de ser uma mensagem errada
+                multicastSubscriberCount++;
+            }
+
+
+        } while(multicastSubscriberCount-- > 0);
 
         return true;
 
@@ -209,33 +329,46 @@ public class Downloader {
         }
         
         // Handeling de URLs
-        String url = null;
-        while (this.getRunning()) {
-            try {
+        Url url = null;
+        try {
 
+            while (this.getRunning()) {
+
+                // resetar o mapa de palavras
+                this.wordIndex.reset();
+
+                // extrair um URL da fila (BLOQUEANTE)
                 this.log.info(toString(), "Procurando outro URL em 'localhost:" + this.queuePort + "/" + this.queueEndpoint + "'...");
                 url = queue.remove(toString());
-
                 this.log.info(toString(), "Recebido '" + url + "'. A extrair...");
                 
-                this.extractWords(url);
-                this.log.info(toString(), "'" + url + "'. Foi analisado.");
-
-                // iterar por todos os novos urls
-                for (String newUrl: this.urls) {
-                    this.extractWords(newUrl);
+                // analisar o website em URL e extrair as palavras para o indice
+                if (this.extractWords(url.getHyperlink())) {
+                    this.log.info(toString(), "'" + url + "'. Foi analisado.");
                 }
+
+                // iterar por todos os novos URLs retirados do URL principal
+                for (String childUrl: this.urls) {
+                    this.log.info(toString(), "A analisar '" + url + "'.");
+
+                    // analisar o website em URL e extrair as palavras para o indice
+                    if (this.extractWords(childUrl)) {
+                        this.log.info(toString(), "'" + url + "'. Foi analisado.");
+                    }
+                }
+
+                // enviar a mensagem para os Barrels
+                System.out.println(wordIndex); //TODO: PRINT DE DEBUG
+                this.sendMessage(wordIndex.toString(), url.getId());
 
                 // limpamos todos os urls encontrados
                 this.urls.clear();
-
-            } catch (IllegalArgumentException e) {
-                this.log.error(toString(), "O URL '" + url + "' esta num formato invalido!");
-            } catch (RemoteException e) {
-                this.log.error(toString(), "Ocorreu um erro no registo da fila de URLs");
-                return false;
+   
             }
-            
+
+        } catch (RemoteException e) {
+            this.log.error(toString(), "Ocorreu um erro no registo da fila de URLs");
+            return false;
         }
 
         return true;
