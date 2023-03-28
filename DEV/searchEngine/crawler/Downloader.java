@@ -183,7 +183,7 @@ public class Downloader {
             return;
         }
 
-        // instanciar um downloader
+        // instanciar um Downloader e apanhar erros
         Downloader downloader;
         try {
             downloader = new Downloader(rmiPort, args[1], args[2], multicastPort);
@@ -218,9 +218,7 @@ public class Downloader {
             System.out.println("Erro: Não foi possível encontrar o registo");
             return;
         }
-        
-
-        
+                
         downloader.closeSocket();
 
     }

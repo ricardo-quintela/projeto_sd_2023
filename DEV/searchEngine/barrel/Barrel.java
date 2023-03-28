@@ -83,13 +83,10 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             log.error(toString(),
                     "Nao foi possivel juntar ao grupo multicast. O endereco fornecido e um endereco multicast?");
             return;
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
         } catch (SecurityException e) {
             log.error(toString(), "Um SecurityManager nao permitiu juntar ao grupo multicast!");
             return;
         }
-        return;
     }
 
     @Override
@@ -125,6 +122,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
         return packet_received;
     }
+
 
     /**
      * Tenta criar o registo RMI
