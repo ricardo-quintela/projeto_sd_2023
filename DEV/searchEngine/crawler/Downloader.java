@@ -257,8 +257,11 @@ public class Downloader {
         // preparar um novo pacote para enviar o indice
         sendPacket = new DatagramPacket(messageBuffer, messageBuffer.length, multicastGroup, this.multicastPort);
         
+        start = Instant.now();
+        end = Instant.now();
+
         // enviar a mensagem até ter atingido todas as confirmações ou ter enviado várias vezes
-        do {
+        while (Duration.between(start, end).compareTo(Duration.ofSeconds(2)) < 0) {
 
             // enviar o indice
             try {
@@ -291,14 +294,14 @@ public class Downloader {
                 
                 // decrementar caso seja confirmaçao
                 multicastSubscriberCount--;
-            } else {
-
-                // incrementar caso nao seja para o caso de ser uma mensagem errada
-                multicastSubscriberCount++;
             }
 
+            // recebeu todas as confirmações
+            if (multicastSubscriberCount == 0){
+                break;
+            }
 
-        } while(multicastSubscriberCount-- > 0);
+        }
 
         return true;
 
