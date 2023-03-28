@@ -129,15 +129,15 @@ public class Downloader {
             for (Element link : links) {
 
                 // Voltar a pôr os links na querry para eles também serem procurados
-                if (!this.urls.contains(url)){
-                    this.urls.add(url);
+                if (!this.urls.contains(link.attr("abs:href"))){
+                    this.urls.add(link.attr("abs:href"));
                 }
 
                 System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
             }
         
         } catch (IOException e) {
-            e.printStackTrace();
+            this.log.error(toString(), "Ocorreu um erro ao ligar a '" + url + "'!");
         }
 
 
