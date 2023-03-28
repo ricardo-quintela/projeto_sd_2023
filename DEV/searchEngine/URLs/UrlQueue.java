@@ -1,7 +1,8 @@
 package searchEngine.URLs;
 
 // import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.AlreadyBoundException;
@@ -9,7 +10,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
-    private CopyOnWriteArrayList<String> urls;
+    private BlockingQueue<String> urls;
     
     private int rmiPort;
     private String rmiEndpoint;
@@ -19,7 +20,7 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
      * @throws RemoteException
      */
     public UrlQueue(int rmiPort, String rmiEndpoint) throws RemoteException {
-        urls = new CopyOnWriteArrayList<String>();
+        urls = new LinkedBlockingQueue<String>();
         this.rmiPort = rmiPort;
         this.rmiEndpoint = rmiEndpoint;
     }
@@ -31,7 +32,11 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
      */
     public void add(String url) throws RemoteException {
         System.out.println("Url adicionado à fila: " + url);
-        urls.add(url);
+        try {
+            urls.put(url);
+        } catch (InterruptedException e) {
+            return;
+        }
     }
 
     /** 
@@ -40,19 +45,13 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
      * @throws RemoteException
      */
     public String remove() throws RemoteException {
-        String url = urls.remove(urls.size()-1);
-        System.out.println("Url removida da fila: " + url);
-        return url;
-    }
-
-    /** 
-     * Vai buscar o elemento da posicao "i" da UrlQueue
-     * @param i posicao na UrlQueue
-     * @return String elemento da posicao "i" da UrlQueue
-     * @throws RemotehException;
-     */
-    public String get(int i) throws RemoteException {
-        return urls.get(i);
+        try {
+            String url = urls.take();
+            System.out.println("Url removida da fila: " + url);
+            return url;
+        } catch (InterruptedException e) {
+            return null;
+        }
     }
 
     /** 

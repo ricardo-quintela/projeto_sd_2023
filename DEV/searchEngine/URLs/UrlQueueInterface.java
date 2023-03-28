@@ -20,14 +20,6 @@ public interface UrlQueueInterface extends Remote{
     public String remove() throws RemoteException;
 
     /** 
-     * Vai buscar o elemento da posicao "i" da UrlQueue
-     * @param i posicao na UrlQueue
-     * @return String elemento da posicao "i" da UrlQueue
-     * @throws RemoteException
-     */
-    public String get(int i) throws RemoteException;
-
-    /** 
      * Verifica se a UrLQueue esta vazia
      * @return boolean true se a UrlQueue nao tiver elementos
      * @throws RemoteException
