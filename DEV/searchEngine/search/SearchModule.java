@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
@@ -37,7 +38,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     private Log log;
 
-    private String fileDataBase;
+    private File fileDataBase;
 
     
     /**
@@ -52,7 +53,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         this.log = new Log();
 
-        this.fileDataBase = "../DataBase/users.db";
+        this.fileDataBase = new File("../DataBase/users.db");
     }
     
 
@@ -252,17 +253,17 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         // Faz a conexao na base de dados e verifica se existe o que foi pedido
         try {
-            conn = DriverManager.getConnection(this.fileDataBase);
+            conn = DriverManager.getConnection("jdbc:sqlite:" + this.fileDataBase.getAbsolutePath());
             stmt = conn.createStatement();
 
             // Insere na base de dados
             String sql = "SELECT * FROM users WHERE nome = '" + nome + "' and password = '" + password + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
-            if (rs.wasNull()){
+            if (!rs.next()){
                 check = false;
             }
-
+            
             while (rs.next()) {
                 String name = rs.getString("nome");
                 String email = rs.getString("password");
@@ -301,13 +302,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         // Faz a conexao na base de dados e insere o que for pedido
         try {
-            conn = DriverManager.getConnection(this.fileDataBase);
+            conn = DriverManager.getConnection("jdbc:sqlite:" + this.fileDataBase.getAbsolutePath());
             stmt = conn.createStatement();
 
             // Insere na base de dados
             String sqlINSERT = "INSERT INTO users(nome, password) VALUES('" + nome + "', '" + password + "')";
             stmt.executeUpdate(sqlINSERT);
-
+        } catch (SQLException e1){
+            System.out.println("Erro na inserção.");
         } catch (Exception e) {
             e.printStackTrace();
             check = false;
@@ -337,20 +339,20 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         try {
 
-            File file = new File(this.fileDataBase);
+            File dataBaseFile = new File(this.fileDataBase.getName());
             Class.forName("org.sqlite.JDBC");
 
             
-            if (file.exists()){
-                conn = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
+            if (dataBaseFile.exists()){
+                conn = DriverManager.getConnection("jdbc:sqlite:" + dataBaseFile.getAbsolutePath());
                 System.out.println("Conexão estabelecida com sucesso!");
                 stmt = conn.createStatement();
             }
             else {
                 File folder = new File("../DataBase");
                 folder.mkdir();
-                file.createNewFile();
-                conn = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
+                dataBaseFile.createNewFile();
+                conn = DriverManager.getConnection("jdbc:sqlite:" + dataBaseFile.getAbsolutePath());
                 System.out.println("Conexão estabelecida com sucesso!");
 
                 // Criar a tabela
@@ -385,7 +387,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         System.out.println("Modo de uso:\nSearchModule {path}\n- path: Caminho do ficheiro de configuracao");
     }
 
-    public boolean register(String name, String password){
+
+    public boolean register(String name, String password) throws RemoteException{
         if (checkDataBase(name, password)){
             return true;
         }
@@ -394,14 +397,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         }
         return false;
     }
-    
-    
-    public boolean login(String name, String password){
+     
+    public boolean login(String name, String password) throws RemoteException{
         if (checkDataBase(name, password)){
             return true;
         }
         return false;
     }
+
 
     @Override
     public String toString() {
@@ -423,6 +426,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         }
 
         
+        
         // instanciar um SearchModule
         SearchModule searchModule;
         try{
@@ -431,6 +435,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         }
         catch (RemoteException e){
             System.out.println("Erro: Ocorreu um erro ao criar o SearchModule");
+            e.printStackTrace();
             return;
         }
 

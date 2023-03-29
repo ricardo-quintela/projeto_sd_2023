@@ -17,6 +17,7 @@ public class Client{
      * Construtor por omissão da classe {@code Client}
      */
     public Client(){
+        this.name = null;
     }
 
     /**
@@ -29,11 +30,11 @@ public class Client{
 
     /**
      * Pede ao utilizador por uma string de palavras chave para pesquisar
-     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
      */
-    public void searchMenu(Scanner sc, SearchResponse searchModuleIF){
+    public void searchMenu(SearchResponse searchModuleIF){
 
         String response;
+        Scanner sc = new Scanner(System.in);
 
         while (true){
 
@@ -68,15 +69,15 @@ public class Client{
 
             // imprimir a resposta recebida
             System.out.println(response);
-
         }
     }
 
     /**
      * Pede ao utilizador um URL e envia ao SearchModule para pesquisar.
-     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
      */
-    public void sendURL(Scanner sc, SearchResponse searchModuleIF){
+    public void sendURL(SearchResponse searchModuleIF){
+
+        Scanner sc = new Scanner(System.in);
 
         while (true){
 
@@ -108,10 +109,15 @@ public class Client{
         }
     }
 
+    /**
+     * Tentamos logar alguem na base de dados.
+     * 
+     * @return true em caso de login bem sucedido
+     */
+    public boolean logar(SearchResponse searchModuleIF){
 
-    public boolean login(Scanner sc, SearchResponse searchModuleIF){
+        Scanner sc = new Scanner(System.in);
 
-        sc.nextLine();
         System.out.print("Username: ");
         
         // ler uma linha do stdin
@@ -123,16 +129,30 @@ public class Client{
         String password = sc.nextLine();
         
         // voltar atrás no menu
-        if (searchModuleIF.login(username, password)){
-            return true;
+        try {
+            if (searchModuleIF.login(username, password)){
+                this.name  = username;
+                return true;
+            } 
+            else {
+                System.out.print("Erro no login.");
+            }
+        } catch (RemoteException e){
+            ;
         }
 
         return false;
     }
 
-    public boolean registar(Scanner sc, SearchResponse searchModuleIF){
+    /**
+     * Tentamos registar alguem na base de dados.
+     * 
+     * @return true em caso de registo bem sucedido
+     */
+    public boolean registo(SearchResponse searchModuleIF){
 
-        sc.nextLine();
+        Scanner sc = new Scanner(System.in);
+
         System.out.print("Username: ");
         
         // ler uma linha do stdin
@@ -144,8 +164,15 @@ public class Client{
         String password = sc.nextLine();
         
         // voltar atrás no menu
-        if (searchModuleIF.register(username, password)){
-            return true;
+        try{
+            if (searchModuleIF.register(username, password)){
+                return true;
+            }
+            else {
+                System.out.printf("Erro no registo.");
+            }
+        } catch (RemoteException e){
+            ;
         }
 
         return false;
@@ -153,9 +180,10 @@ public class Client{
 
     /**
      * Menu de utilizador
-     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
      */
-    public void menu(Scanner sc, SearchResponse searchModuleIF){
+    public void menu(SearchResponse searchModuleIF){
+
+        Scanner sc = new Scanner(System.in);
 
         boolean loop = true;
         int num;
@@ -171,22 +199,30 @@ public class Client{
 
                     // indexar um URL
                     case 1:
-                        this.sendURL(sc, searchModuleIF);
+                        this.sendURL(searchModuleIF);
                         break;
 
                     // pesquisar
                     case 2:
-                        this.searchMenu(sc, searchModuleIF);
+                        this.searchMenu(searchModuleIF);
                         break;
 
+                    // registar
                     case 3:
-                        if(this.registar(sc, searchModuleIF)){
+                        if (this.name != null) {
+                            System.out.println("Já estás logado.");
+                        }
+                        else if (this.registo(searchModuleIF)){
                             System.out.println("Registado com sucesso.");
                         }
                         break;
-
+                    
+                    // loagr
                     case 4:
-                        if(this.login(sc, searchModuleIF)){
+                        if (this.name != null) {
+                            System.out.println("Já estás logado.");
+                        }
+                        else if (this.logar(searchModuleIF)){
                             System.out.println("Logado com sucesso.");
                         }
                         break;
@@ -208,6 +244,8 @@ public class Client{
 
         }
 
+        sc.close();
+
     }
 
 
@@ -215,7 +253,7 @@ public class Client{
      * Imprime no {@code stdin} o modo de uso do programa
      */
     private static void printUsage() {
-        System.out.println("Modo de uso:\nClient {rmi_port} {rmi_endpoint} {username}\n- rmi_port: Porta do registo RMI do SearchModule\n- rmi_endpoint: Endpoint do SearchModule no registo RMI\n- username: O nome do cliente");
+        System.out.println("Modo de uso:\nClient {rmi_port} {rmi_endpoint} {username}\n- rmi_port: Porta do registo RMI do SearchModule\n- rmi_endpoint: Endpoint do SearchModule no registo RMI");
     }
 
 
@@ -227,7 +265,7 @@ public class Client{
             return;
         }
         
-        if (args.length != 3){
+        if (args.length != 2){
             printUsage();
             return;
         }
@@ -267,15 +305,10 @@ public class Client{
             return;
         }
 
-        Client client = new Client(args[2]);
-
-        // instanciar um scanner
-        Scanner sc = new Scanner(System.in);
+        Client client = new Client();
 
         // menu da aplicação
-        client.menu(sc, searchModuleIF);
+        client.menu(searchModuleIF);
         
-        sc.close();
-
     }
 }

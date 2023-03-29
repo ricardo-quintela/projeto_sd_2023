@@ -34,8 +34,26 @@ public interface SearchResponse extends Remote {
     public boolean execURL(String name) throws RemoteException;
 
 
-    public boolean register(String name, String password);
+    /**
+     * 
+     * Tenta registar um novo utilizador na base de dados.
+     * 
+     * @param name
+     * @param password
+     * @return
+     * @throws RemoteException
+     */
+    public boolean register(String name, String password) throws RemoteException;
     
-    
-    public boolean login(String name, String password);
+
+    /**
+     * 
+     * Tenta encontrar um utilizador na base de dados.
+     * 
+     * @param name
+     * @param password
+     * @return
+     * @throws RemoteException
+     */
+    public boolean login(String name, String password) throws RemoteException;
 }
