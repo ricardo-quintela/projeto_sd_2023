@@ -32,4 +32,10 @@ public interface SearchResponse extends Remote {
      * @throws RemoteException caso haja um erro no RMI
      */
     public boolean execURL(String name) throws RemoteException;
+
+
+    public boolean register(String name, String password);
+    
+    
+    public boolean login(String name, String password);
 }

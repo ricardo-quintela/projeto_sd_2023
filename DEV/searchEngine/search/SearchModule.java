@@ -10,11 +10,17 @@ import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.io.File;
 
 import searchEngine.barrel.QueryIf;
 import searchEngine.fileWorker.TextFileWorker;
 import searchEngine.utils.Log;
 import searchEngine.URLs.UrlQueueInterface;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+import java.sql.ResultSet;
 
 public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
@@ -31,6 +37,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     private Log log;
 
+    private String fileDataBase;
+
     
     /**
      * Construtor por omissão da classe SearchModule
@@ -43,6 +51,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         this.barrel_endpoints = new ArrayList<String>();
 
         this.log = new Log();
+
+        this.fileDataBase = "../DataBase/users.db";
     }
     
 
@@ -228,12 +238,169 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     }
 
+    /**
+     * Verifica na base de dados se um usuario existe.
+     * 
+     * @param nome username
+     * @param password password
+     * @return true ou false caso exista ou não
+     */
+    public boolean checkDataBase(String nome, String password){
+        Connection conn = null;
+        Statement stmt = null;
+        boolean check = true;
+
+        // Faz a conexao na base de dados e verifica se existe o que foi pedido
+        try {
+            conn = DriverManager.getConnection(this.fileDataBase);
+            stmt = conn.createStatement();
+
+            // Insere na base de dados
+            String sql = "SELECT * FROM users WHERE nome = '" + nome + "' and password = '" + password + "'";
+            ResultSet rs = stmt.executeQuery(sql);
+
+            if (rs.wasNull()){
+                check = false;
+            }
+
+            while (rs.next()) {
+                String name = rs.getString("nome");
+                String email = rs.getString("password");
+                System.out.println(name + " - " + email);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                // Fechar a conexão com o banco de dados
+                conn.close();
+                stmt.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        return check;
+    }
+
+    /**
+     * Insere na base de dados um novo usuario.
+     * 
+     * @param nome username
+     * @param password password
+     * @return true ou false caso seja bem inserido ou não
+     */
+    public boolean insertDataBase(String nome, String password){
+
+        Connection conn = null;
+        Statement stmt = null;
+        boolean check = true;
+
+        // Faz a conexao na base de dados e insere o que for pedido
+        try {
+            conn = DriverManager.getConnection(this.fileDataBase);
+            stmt = conn.createStatement();
+
+            // Insere na base de dados
+            String sqlINSERT = "INSERT INTO users(nome, password) VALUES('" + nome + "', '" + password + "')";
+            stmt.executeUpdate(sqlINSERT);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            check = false;
+        } finally {
+            try {
+                // Fechar a conexão com o banco de dados
+                conn.close();
+                stmt.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                check = false;
+            }
+        }
+
+        return check;
+    }
+
+    /**
+     * Cria a base de dados se necessário. Caso contrário apenas testa a ligação.
+     * 
+     * @return true ou false consoante a base de dados está operacional ou não
+     */
+    public boolean dataBaseInitialize(){
+
+        Connection conn = null;
+        Statement stmt = null;
+
+        try {
+
+            File file = new File(this.fileDataBase);
+            Class.forName("org.sqlite.JDBC");
+
+            
+            if (file.exists()){
+                conn = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
+                System.out.println("Conexão estabelecida com sucesso!");
+                stmt = conn.createStatement();
+            }
+            else {
+                File folder = new File("../DataBase");
+                folder.mkdir();
+                file.createNewFile();
+                conn = DriverManager.getConnection("jdbc:sqlite:" + file.getAbsolutePath());
+                System.out.println("Conexão estabelecida com sucesso!");
+
+                // Criar a tabela
+                stmt = conn.createStatement();
+                String sql = "CREATE TABLE users (nome TEXT PRIMARY KEY, password TEXT)";
+                stmt.executeUpdate(sql);
+            }
+
+            conn.close();
+            stmt.close();
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                // Fechar a conexão com o banco de dados
+                conn.close();
+                stmt.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
 
     /**
      * Imprime no {@code stdin} o modo de uso do programa
      */
     private static void printUsage() {
         System.out.println("Modo de uso:\nSearchModule {path}\n- path: Caminho do ficheiro de configuracao");
+    }
+
+    public boolean register(String name, String password){
+        if (checkDataBase(name, password)){
+            return true;
+        }
+        if (insertDataBase(name, password)){
+            return true;
+        }
+        return false;
+    }
+    
+    
+    public boolean login(String name, String password){
+        if (checkDataBase(name, password)){
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -279,5 +446,10 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return;
         }
 
+        // tenta conectar na base de dados
+        if (!searchModule.dataBaseInitialize()){
+            searchModule.unexport();
+            return;
+        }
     }
 }

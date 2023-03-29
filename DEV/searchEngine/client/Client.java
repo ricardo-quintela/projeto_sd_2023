@@ -108,6 +108,49 @@ public class Client{
         }
     }
 
+
+    public boolean login(Scanner sc, SearchResponse searchModuleIF){
+
+        sc.nextLine();
+        System.out.print("Username: ");
+        
+        // ler uma linha do stdin
+        String username = sc.nextLine();
+
+        System.out.print("Password: ");
+        
+        // ler uma linha do stdin
+        String password = sc.nextLine();
+        
+        // voltar atrás no menu
+        if (searchModuleIF.login(username, password)){
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean registar(Scanner sc, SearchResponse searchModuleIF){
+
+        sc.nextLine();
+        System.out.print("Username: ");
+        
+        // ler uma linha do stdin
+        String username = sc.nextLine();
+
+        System.out.print("Password: ");
+        
+        // ler uma linha do stdin
+        String password = sc.nextLine();
+        
+        // voltar atrás no menu
+        if (searchModuleIF.register(username, password)){
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Menu de utilizador
      * @param sc o {@code Scanner} de input ligado ao {@code stdin}
@@ -118,7 +161,7 @@ public class Client{
         int num;
         while (loop){
 
-            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - sair\nDigite: ");
+            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - Registar\n4 - Login\n5 - sair\nDigite: ");
 
             try{
                 
@@ -136,8 +179,20 @@ public class Client{
                         this.searchMenu(sc, searchModuleIF);
                         break;
 
-                    // sair
                     case 3:
+                        if(this.registar(sc, searchModuleIF)){
+                            System.out.println("Registado com sucesso.");
+                        }
+                        break;
+
+                    case 4:
+                        if(this.login(sc, searchModuleIF)){
+                            System.out.println("Logado com sucesso.");
+                        }
+                        break;
+
+                    // sair
+                    case 5:
                         loop = false;
                         break;
 
