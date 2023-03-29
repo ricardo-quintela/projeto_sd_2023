@@ -49,7 +49,7 @@ public class Client{
 
     public boolean searchURL(SearchResponse searchModuleIF){
 
-        String response;
+        CopyOnWriteArrayList<String> response;
         Scanner sc = new Scanner(System.in);
 
         while (true){
@@ -85,7 +85,9 @@ public class Client{
             }
 
             // imprimir a resposta recebida
-            System.out.println(response);
+            for (String str : response) {
+                System.out.println(str);
+            }
             this.lastSearch = null;
         }
 
@@ -121,7 +123,7 @@ public class Client{
      */
     public boolean searchMenu(SearchResponse searchModuleIF){
 
-        String response;
+        CopyOnWriteArrayList<String> response = null;
         Scanner sc = new Scanner(System.in);
 
         while (true){
@@ -161,7 +163,9 @@ public class Client{
             }
 
             // imprimir a resposta recebida
-            System.out.println(response);
+            for (String str: response) {
+                System.out.println(str);
+            }
             this.lastSearch = null;
         }
         return true;
@@ -234,16 +238,16 @@ public class Client{
         try {
             if (searchModuleIF.login(username, password)){
                 this.name  = username;
+                System.out.printf("Login bem feito.");
                 return true;
             } 
             else {
                 System.out.println("Erro no login.");
+                return true;
             }
         } catch (RemoteException e){
             return false;
         }
-
-        return false;
     }
 
     /**
@@ -268,16 +272,16 @@ public class Client{
         // voltar atrás no menu
         try{
             if (searchModuleIF.register(username, password)){
+                System.out.printf("Registo foi bem feito.");
                 return true;
             }
             else {
                 System.out.printf("Erro no registo.");
+                return true;
             }
         } catch (RemoteException e){
             return false;
         }
-
-        return false;
     }
 
     /**
@@ -320,7 +324,7 @@ public class Client{
                             System.out.println("Já estás logado.");
                         }
                         else if (this.registo(searchModuleIF)){
-                            System.out.println("Registado com sucesso.");
+                            ;
                         }
                         else {
                             return num;
@@ -333,7 +337,7 @@ public class Client{
                             System.out.println("Já estás logado.");
                         }
                         else if (this.logar(searchModuleIF)){
-                            System.out.println("Logado com sucesso.");
+                            ;
                         }
                         else {
                             return num;

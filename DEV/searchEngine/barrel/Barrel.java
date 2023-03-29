@@ -106,13 +106,12 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         }
     }
 
-    public String execURL(String url) throws RemoteException{
-        System.out.println("Recebi - " + url);
-        return "Chegou!";
+    public CopyOnWriteArrayList<String> execURL(String url) throws RemoteException{
+        return this.searchdataBase(url, null);
     }
 
     @Override
-    public String execQuery(CopyOnWriteArrayList<String> query) throws RemoteException {
+    public CopyOnWriteArrayList<String> execQuery(CopyOnWriteArrayList<String> query) throws RemoteException {
         // String string = "";
 
         // for (String word : query) {
@@ -163,6 +162,17 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                                     "numpesquisas INTEGER," +
                                     "PRIMARY KEY(url)" +
                                 ");" +
+
+                                "CREATE TABLE referencias (" +
+                                    "url_referencia TEXT," +
+                                    "PRIMARY KEY(url_referencia)" +
+                                ");" +
+
+                                "CREATE TABLE link_referencias (" +
+                                   " link_url TEXT," +
+                                   " referencias_url_referencia TEXT," +
+                                   " PRIMARY KEY(link_url,referencias_url_referencia)" +
+                                ");" +
                                 
                                 "CREATE TABLE palavras_link (" +
                                     "palavras_palavra TEXT," +
@@ -194,11 +204,13 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
     }
 
 
-    public String searchdataBase(String url, CopyOnWriteArrayList<String> palavras){
+    public CopyOnWriteArrayList<String> searchdataBase(String url, CopyOnWriteArrayList<String> palavras){
 
         Connection conn = null;
         Statement stmt = null;
         String retornar = "";
+
+        CopyOnWriteArrayList<String> busca = new CopyOnWriteArrayList<>();
 
         // Faz a conexao na base de dados e insere o que for pedido
         try {
@@ -206,21 +218,22 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             stmt = conn.createStatement();
 
             if (url != null){
-                // Insere na base de dados
-                String sql = "SELECT * FROM palavras_link WHERE link_url = '" + url + "'";
+                // Procura na base de dados
+                String sql = "SELECT * FROM link_referencias WHERE link_url = '" + url + "'";
                 ResultSet rs = stmt.executeQuery(sql);
 
                 while (rs.next()){
-                    retornar += rs.getString("palavras_palavra") + " ";
-                    sql = "UPDATE link SET numpesquisas = numpesquisas + 1 WHERE url = '" + url + "'";
-                    stmt.executeUpdate(sql);
+                    busca.add(rs.getString("referencias_url_referencia"));
                 }
+                
+                sql = "UPDATE link SET numpesquisas = numpesquisas + 1 WHERE url = '" + url + "'";
+                stmt.executeUpdate(sql);
             }
+
             else if (palavras != null){
 
                 ArrayList<String> urlsEncontrados = new ArrayList<>();
 
-                
                 for (String word : palavras) {
                     // Insere na base de dados
                     String sql = "SELECT * FROM palavras_link WHERE palavras_palavra = '" + word + "'";
@@ -228,17 +241,20 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
     
                     while (rs.next()){
                         urlsEncontrados.add(rs.getString("link_url"));
-                        System.out.println("Palavra: " + rs.getString("palavras_palavra") + " Url: " + rs.getString("link_url"));
-                        sql = "UPDATE palavras SET numpesquisas = numpesquisas + 1 WHERE palavra = '" + word + "'";
-                        stmt.executeUpdate(sql);
                     }
+                    
+                    sql = "UPDATE palavras SET numpesquisas = numpesquisas + 1 WHERE palavra = '" + word + "'";
+                    stmt.executeUpdate(sql);
                 }
 
                 Map<String, Long> couterMap = urlsEncontrados.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
 
                 for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
                     if (entry.getValue() == palavras.size()){
-                        retornar += entry.getKey() + " ";
+                        String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
+                        ResultSet rs = stmt.executeQuery(sql);
+                        retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
+                        busca.add(retornar);
                     }
                 }
             }
@@ -259,11 +275,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             }
         }
 
-        return retornar;
+        return busca;
 
     }
 
-    public boolean insertDataBase(int msgId, String url, ArrayList<String> palavras){
+    public boolean insertDataBase(int msgId, String url, ArrayList<String> palavras, ArrayList<String> referencias){
 
         Connection conn = null;
         Statement stmt = null;
@@ -313,6 +329,35 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                     String sqlINSERT = "INSERT INTO palavras_link(palavras_palavra, link_url) VALUES('" + word + "','" + url + "')";
                     stmt.executeUpdate(sqlINSERT);
                     System.out.println("Inserção nas palavras + links");
+                }
+            }
+
+            for (String ref: referencias){
+
+                // Insere na base de dados
+                sql = "SELECT * FROM referencias WHERE url_referencia = '" + ref + "'";
+                rs = stmt.executeQuery(sql);
+
+                if (rs.next()){
+                    check = false;
+                }
+                else {
+                    String sqlINSERT = "INSERT INTO referencias(url_referencia) VALUES('" + ref + "')";
+                    stmt.executeUpdate(sqlINSERT);
+                    System.out.println("Inserção da referencia");
+                }
+
+                // Insere na base de dados
+                sql = "SELECT * FROM link_referencias WHERE referencias_url_referencia  = '" + ref + "' and link_url = '" + url + "'";
+                rs = stmt.executeQuery(sql);
+
+                if (rs.next()){
+                    check = false;
+                }
+                else {
+                    String sqlINSERT = "INSERT INTO link_referencias(link_url, referencias_url_referencia) VALUES('" + url + "','" + ref + "')";
+                    stmt.executeUpdate(sqlINSERT);
+                    System.out.println("Inserção da referencia links");
                 }
             }
 
@@ -490,12 +535,19 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         }
 
         // ArrayList<String> palavras = new ArrayList<>();
+        // ArrayList<String> links = new ArrayList<>();
+        // links.add("link1");
+        // links.add("link2");
+        // links.add("link3");
+
         // palavras.add("ola");
         // palavras.add("adeus");
-        // barrel.insertDataBase(1,"url", palavras);
+        // barrel.insertDataBase(1,"url", palavras, links);
 
-        // // palavras.add("as");
-        // // barrel.searchdataBase(null, palavras);
+        // palavras.clear();
+        // palavras.add("adeus");
+        // barrel.insertDataBase(1,"url2", palavras, links);
+
         // System.out.println("PASSOU");
 
         barrel.closeSocket();
