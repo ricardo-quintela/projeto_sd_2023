@@ -12,6 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 import searchEngine.utils.Log;
@@ -21,6 +22,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
     private MulticastSocket multicastSocket;
     private String multicastAddress;
     private int multicastPort;
+    private int sockTimeout;
 
     private Thread multicastThread;
     private InetAddress multicastGroup;
@@ -39,16 +41,21 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
      * @param rmiEndpoint      o endpoint onde o {@code Barrel} vai ser registado
      * @param multicastAddress o endereço do grupo multicast dos {@code Downloader}s
      * @param multicastPort    o porto multicast dos {@code Downloader}s
+     * @param sockTimeout      o tempo de espera do socket para receber resposta em
+     *                         ms
      * @throws RemoteException caso ocorra um erro no RMI
      * @throws IOException     caso ocorra um erro a criar o MulticastSocket
      */
-    public Barrel(int rmiPort, String rmiEndpoint, String multicastAddress, int multicastPort)
+    public Barrel(int rmiPort, String rmiEndpoint, String multicastAddress, int multicastPort, int sockTimeout)
             throws RemoteException, IOException {
         this.rmiPort = rmiPort;
         this.rmiEndpoint = rmiEndpoint;
         this.log = new Log();
 
         this.multicastSocket = new MulticastSocket(multicastPort);
+        this.sockTimeout = sockTimeout;
+        this.multicastSocket.setSoTimeout(sockTimeout);
+
         this.multicastAddress = multicastAddress;
         this.multicastPort = multicastPort;
         this.multicastThread = new Thread(this);
@@ -65,31 +72,28 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         this.log = new Log();
     }
 
-
     /**
      * Define o estado do atributo running
+     * 
      * @param state o estado para alterar o atributo running
      */
-    public void setRunning(boolean state){
+    public void setRunning(boolean state) {
         this.running = state;
     }
 
-
-
-    public boolean receiveMessage(){
+    public boolean receiveMessage() {
 
         DatagramPacket packet;
         String receivedMessage[], connectionMessage;
 
         int messageId, buffSize, numUrls;
 
-        //? 1 - SETUP
+        // ? 1 - SETUP
 
         // buffer que recebe mensagens default de conexao
         byte[] connectionBuffer, messageBuffer;
 
-
-        //? 2 - RECEBER HEARTBEAT
+        // ? 2 - RECEBER HEARTBEAT
 
         connectionBuffer = new byte[50];
         packet = new DatagramPacket(connectionBuffer, connectionBuffer.length);
@@ -100,19 +104,24 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
                 this.log.info(toString(), "A espera de Heartbeat...");
                 this.multicastSocket.receive(packet);
-                this.log.info(toString(), "Heartbeat recebido!");
                 
+            }
+            // deu timeout por isso cancela-se o procedimento inteiro
+            catch (SocketTimeoutException e) {
+                this.log.error(toString(), "Heartbeat deu timeout!");
+                return false;
                 
             } catch (IOException e) {
                 this.log.error(toString(), "Ocorreu um erro a receber um heartbeat!");
             }
             
-            
             // separar a mensagem por ";"
             receivedMessage = (new String(packet.getData(), 0, packet.getLength())).split(" *; *");
+            // //TODO: DEBUG HEARTBEAT
+            // System.out.println("================\n" + (new String(packet.getData(), 0, packet.getLength())).split(" *; *")[0] + "\n===================");
             
             // verificar se a mensagem é uma confirmaçao de heartbeat
-            if (receivedMessage.length > 0 && receivedMessage[0].equals("type | heartbeat")){
+            if (receivedMessage.length > 0 && receivedMessage[0].equals("type | heartbeat")) {
                 try {
                     messageId = Integer.parseInt(receivedMessage[1].split(" *\\| *")[1]);
                     buffSize = Integer.parseInt(receivedMessage[2].split(" *\\| *")[1]);
@@ -120,17 +129,17 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                     this.log.error(toString(), "ID de mensagem invalido - nao e um numero!");
                     return false;
                     
-                } catch (IndexOutOfBoundsException e){
+                } catch (IndexOutOfBoundsException e) {
                     this.log.error(toString(), "Formato de Heartbeat invalido!");
                     return false;
                 }
-
+                
+                this.log.info(toString(), "Heartbeat recebido!");
                 break;
             }
         }
 
-        
-        //? 3 - ALOCAR ESPAÇO E RESPONDER A HEARTBEAT
+        // ? 3 - ALOCAR ESPAÇO E RESPONDER A HEARTBEAT
 
         // alocar espaço para a mensagem a receber
         messageBuffer = new byte[buffSize];
@@ -139,9 +148,9 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         connectionMessage = "type | ready; id | " + messageId + ";";
         connectionBuffer = connectionMessage.getBytes();
         packet = new DatagramPacket(connectionBuffer, connectionBuffer.length, this.multicastGroup, this.multicastPort);
-        
+
         // continuar a enviar até conseguir
-        while (true){
+        while (true) {
 
             // enviar resposta a heartbeat
             try {
@@ -153,15 +162,16 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 break;
 
             } catch (IOException e) {
-                this.log.error(toString(), "Ocorreu um erro ao confirmar a conexao para '" + this.multicastAddress + "'!");
-            } catch (SecurityException e){
-                this.log.error(toString(), "Um SecurityManager nao permitiu o envio da resposta de heartbeat para '" + this.multicastAddress + "'!");
+                this.log.error(toString(),
+                        "Ocorreu um erro ao confirmar a conexao para '" + this.multicastAddress + "'!");
+            } catch (SecurityException e) {
+                this.log.error(toString(), "Um SecurityManager nao permitiu o envio da resposta de heartbeat para '"
+                        + this.multicastAddress + "'!");
                 return false;
             }
         }
 
-
-        //? 4 - RECEBER A MENSAGEM
+        // ? 4 - RECEBER A MENSAGEM
 
         // preparar um novo packet para receber a mensagem
         packet = new DatagramPacket(messageBuffer, messageBuffer.length);
@@ -172,55 +182,57 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
                 this.log.info(toString(), "A espera da mensagem " + messageId + "...");
                 this.multicastSocket.receive(packet);
-                
-                
-                
+
+            }
+            // deu timeout por isso cancela-se o procedimento inteiro
+            catch (SocketTimeoutException e) {
+                this.log.error(toString(), "Rececao de mensagem deu timeout!");
+                return false;
+
             } catch (IOException e) {
                 this.log.error(toString(), "Ocorreu um erro a receber a mensagem!");
                 continue;
             }
-            
-            
+
             // separar a mensagem por ";"
             receivedMessage = (new String(packet.getData(), 0, packet.getLength())).split(" *; *");
-            
+
+            // //TODO: DEBUG MENSAGEM
+            // System.out.println("================\n" + (new String(packet.getData(), 0, packet.getLength())).split(" *; *")[0] + "\n===================");
+
             // verificar se a mensagem é uma confirmaçao de heartbeat
-            if (receivedMessage.length > 0 && receivedMessage[0].equals("type | url_list") && receivedMessage[1].equals("id | " + messageId)){
-                
+            if (receivedMessage.length > 0 && receivedMessage[0].equals("type | url_list")
+                    && receivedMessage[1].equals("id | " + messageId)) {
+
                 this.log.info(toString(), "Mensagem " + messageId + " recebida!");
 
                 try {
-                    
+
                     numUrls = Integer.parseInt(receivedMessage[2].split(" *\\| *")[1]);
 
                 } catch (NumberFormatException e) {
                     this.log.error(toString(), "Numero de URLs invalido!");
                     return false;
-                    
-                } catch (IndexOutOfBoundsException e){
+
+                } catch (IndexOutOfBoundsException e) {
                     this.log.error(toString(), "Formato de mensagem invalido!");
                     return false;
-                }
-
-                // TODO: PRINTS DE DEBUG PARA SABER SE RECEBEU A MENSAGEM
-                for (int i = 3; i < numUrls; i++) {
-                    System.out.println(receivedMessage[i]);
                 }
 
                 break;
             }
         }
 
-        //? 5 - CONFIRMAR RECEBIMENTO DA MENSAGEM
+
+        // ? 5 - CONFIRMAR RECEBIMENTO DA MENSAGEM
 
         // criar a mensagem de confirmação de envio
         connectionMessage = "type | rcvd; id | " + messageId + ";";
         connectionBuffer = connectionMessage.getBytes();
         packet = new DatagramPacket(connectionBuffer, connectionBuffer.length, this.multicastGroup, this.multicastPort);
 
-
         // continuar a enviar até conseguir
-        while (true){
+        while (true) {
 
             // enviar resposta a heartbeat
             try {
@@ -232,30 +244,35 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 break;
 
             } catch (IOException e) {
-                this.log.error(toString(), "Ocorreu um erro ao confirmar o envio para '" + this.multicastAddress + "'!");
-            } catch (SecurityException e){
-                this.log.error(toString(), "Um SecurityManager nao permitiu o envio da confirmação de envio para '" + this.multicastAddress + "'!");
+                this.log.error(toString(),
+                        "Ocorreu um erro ao confirmar o envio para '" + this.multicastAddress + "'!");
+            } catch (SecurityException e) {
+                this.log.error(toString(), "Um SecurityManager nao permitiu o envio da confirmação de envio para '"
+                        + this.multicastAddress + "'!");
                 return false;
             }
         }
 
+
+        // TODO: PRINTS DE DEBUG PARA SABER SE RECEBEU A MENSAGEM
+        for (int i = 3; i < 3 + numUrls; i++) {
+            System.out.println("Mensagem recebida: " + receivedMessage[i]);
+        }
+
+
         return true;
 
-
     }
-
-
-
 
     public void run() {
 
         // criar um grupo multicast
         try {
             this.multicastGroup = InetAddress.getByName(this.multicastAddress);
-        } catch (UnknownHostException e){
+        } catch (UnknownHostException e) {
             this.log.error(toString(), "Nao foi possivel encontrar '" + this.multicastAddress + "'!");
             return;
-        } catch (SecurityException e){
+        } catch (SecurityException e) {
             this.log.error(toString(), "Um SecurityManager nao permitiu a ligacao a '" + this.multicastAddress + "'!");
             return;
         }
@@ -263,19 +280,18 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         // juntar ao grupo multicast
         try {
             this.multicastSocket.joinGroup(this.multicastGroup);
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             this.log.error(toString(), "Ocorreu um erro a juntar ao grupo multicast!");
             return;
         }
 
         // receber as mensagens por multicast
-        while (this.running){
+        while (this.running) {
             receiveMessage();
         }
-        
-    }
 
+    }
 
     @Override
     public String execQuery(CopyOnWriteArrayList<String> query) throws RemoteException {
@@ -289,7 +305,6 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
         return this + ": " + string;
     }
-
 
     /**
      * Tenta criar o registo RMI
@@ -401,7 +416,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         // pacotes do grupo multicast
         Barrel barrel;
         try {
-            barrel = new Barrel(rmiPort, args[1], args[2], multicastPort);
+            barrel = new Barrel(rmiPort, args[1], args[2], multicastPort, 5000);
 
         } catch (RemoteException e) {
             System.out.println("Erro: Ocorreu um erro de RMI ao criar o Barrel!");
@@ -412,11 +427,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         }
 
         // apanhar sinal SIGINT
-        Runtime.getRuntime().addShutdownHook(new Thread(){
+        Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
 
-                synchronized (this){
+                synchronized (this) {
                     System.out.println("RECEBIDO SIGINT");
                     barrel.closeSocket();
                     barrel.setRunning(false);
