@@ -37,11 +37,13 @@ public class Downloader {
     private int queuePort;
     private String queueEndpoint;
     private Log log;
-    boolean running;
+    private boolean running;
 
     private MulticastSocket multicastSocket;
     private String multicastAddress;
     private int multicastPort;
+    
+    private InetAddress multicastGroup;
 
     private BlockingQueue<String> urls;
 
@@ -168,8 +170,7 @@ public class Downloader {
      * @return true caso a mensagem seja enviada; false caso contrário
      */
     public boolean sendMessage(String urlIndex, int urlId){
-        
-        InetAddress multicastGroup;
+
         DatagramPacket sendPacket, rcvPacket;
         Instant start, end;
         String receivedMessage[];
@@ -178,51 +179,42 @@ public class Downloader {
 
         // buffer que recebe mensagens default de conexao
         byte[] connectionBuffer;
-        
-        // criar um grupo multicast
-        try {
-            multicastGroup = InetAddress.getByName(this.multicastAddress);
-        } catch (UnknownHostException e){
-            this.log.error(toString(), "Nao foi possivel encontrar '" + this.multicastAddress + "'!");
-            return false;
-        } catch (SecurityException e){
-            this.log.error(toString(), "Um SecurityManager nao permitiu a ligacao a '" + this.multicastAddress + "'!");
-            return false;
-        }
 
-        // juntar ao grupo multicast
-        try {
-            this.multicastSocket.joinGroup(multicastGroup);
-        } catch (IOException e){
-            this.log.error(toString(), "Ocorreu um erro a juntar ao grupo multicast!");
-            return false;
-        }
 
         // criar a mensagem
-        String message = "type | url_list; id | " + urlId + "; " + urlIndex;
+        String message = "type | url_list; id | " + urlId + "; " + urlIndex + ";";
         byte[] messageBuffer = message.getBytes();
         
         
-        //? 2 - PEDIR PARA ENVIAR MENSAGEM
+        //? 2 - ENVIAR HEARTBEAT
         
         // criar a mensagem heartbeat
-        String connectionMessage = "type | heartbeat; id | " + urlId + "; buff_size | " + messageBuffer.length;
+        String connectionMessage = "type | heartbeat; id | " + urlId + "; buff_size | " + messageBuffer.length + ";";
         connectionBuffer = connectionMessage.getBytes();
-        sendPacket = new DatagramPacket(connectionBuffer, connectionBuffer.length, multicastGroup, this.multicastPort);
+        sendPacket = new DatagramPacket(connectionBuffer, connectionBuffer.length, this.multicastGroup, this.multicastPort);
         
-        // enviar heartbeat
-        try {
-            this.multicastSocket.send(sendPacket);
+        // continuar a enviar até conseguir
+        while (true) {
 
-        } catch (IOException e) {
-            this.log.error(toString(), "Ocorreu um erro a iniciar conexao para '" + this.multicastAddress + "'!");
-        } catch (SecurityException e){
-            this.log.error(toString(), "Um SecurityManager nao permitiu o envio de um heartbeat para '" + this.multicastAddress + "'!");
-            return false;
+            // enviar heartbeat
+            try {
+
+                this.log.info(toString(), "A enviar Heartbeat...");
+                this.multicastSocket.send(sendPacket);
+                this.log.info(toString(), "Heartbeat enviado!");
+                
+                break;
+    
+            } catch (IOException e) {
+                this.log.error(toString(), "Ocorreu um erro a iniciar conexao para '" + this.multicastAddress + "'!");
+            } catch (SecurityException e){
+                this.log.error(toString(), "Um SecurityManager nao permitiu o envio de um heartbeat para '" + this.multicastAddress + "'!");
+                return false;
+            }
         }
 
         //? 3 - RECEBER CONFIRMAÇÕES DE DISPONIBILIDADE
-
+        
         int multicastSubscriberCount = 0;
         start = Instant.now();
         end = Instant.now();
@@ -230,45 +222,54 @@ public class Downloader {
         // preparar um novo packet para receber confirmaçoes
         connectionBuffer = new byte[50];
         rcvPacket = new DatagramPacket(connectionBuffer, connectionBuffer.length);
-
+        
         // receber confirmações durante 2 segundos
         while (Duration.between(start, end).compareTo(Duration.ofSeconds(2)) < 0){
 
             // receber uma mensagem do grupo (BLOQUEANTE)
             try {
+
+                this.log.info(toString(), "A escutar confirmacoes de Heartbeat...");
                 this.multicastSocket.receive(rcvPacket);
+                
             } catch (IOException e) {
                 this.log.error(toString(), "Ocorreu um erro a receber uma confirmacao de heartbeat!");
                 continue;
             }
-
+            
             // separar a mensagem por ";"
-            receivedMessage = (new String(rcvPacket.getData(), 0, rcvPacket.getLength())).split("; *");
-
+            receivedMessage = (new String(rcvPacket.getData(), 0, rcvPacket.getLength())).split(" *; *");
+            
             // verificar se a mensagem é uma confirmaçao de heartbeat
             if (receivedMessage.length > 0 && receivedMessage[0].equals("type | ready") && receivedMessage[1].equals("id | " + urlId)){
                 multicastSubscriberCount++;
+                this.log.info(toString(), "Recebida confirmacao de Heartbeat! Total de " + multicastSubscriberCount);
             }
-
+            
         }
 
         //? 4 - ENVIAR A MENSAGEM PARA O GRUPO
 
         // preparar um novo pacote para enviar o indice
-        sendPacket = new DatagramPacket(messageBuffer, messageBuffer.length, multicastGroup, this.multicastPort);
+        sendPacket = new DatagramPacket(messageBuffer, messageBuffer.length, this.multicastGroup, this.multicastPort);
         
         start = Instant.now();
         end = Instant.now();
-
-        // enviar a mensagem até ter atingido todas as confirmações ou ter enviado várias vezes
+        
+        // enviar a mensagem até ter atingido todas as confirmações ou até dar timeout
         while (Duration.between(start, end).compareTo(Duration.ofSeconds(2)) < 0) {
 
             // enviar o indice
             try {
+                
+                this.log.info(toString(), "A enviar mensagem para o grupo...");
                 this.multicastSocket.send(sendPacket);
+                this.log.info(toString(), "Mensagem enviada!");
     
             } catch (IOException e) {
                 this.log.error(toString(), "Ocorreu um erro a enviar o indice para '" + this.multicastAddress + "'!");
+                continue;
+
             } catch (SecurityException e){
                 this.log.error(toString(), "Um SecurityManager nao permitiu o envio do indice para '" + this.multicastAddress + "'!");
                 return false;
@@ -280,7 +281,12 @@ public class Downloader {
 
             // receber uma mensagem do grupo (BLOQUEANTE)
             try {
+
+
+                this.log.info(toString(), "A escutar confirmacoes de envio...");
                 this.multicastSocket.receive(rcvPacket);
+                
+                
             } catch (IOException e) {
                 this.log.error(toString(), "Ocorreu um erro a receber uma confirmacao de envio!");
                 continue;
@@ -288,12 +294,13 @@ public class Downloader {
 
             // separar a mensagem por ";"
             receivedMessage = (new String(rcvPacket.getData(), 0, rcvPacket.getLength())).split("; *");
-
-            // verificar se a mensagem é uma confirmaçao de heartbeat
+            
+            // verificar se a mensagem é uma confirmaçao de envio
             if (receivedMessage.length > 0 && receivedMessage[0].equals("type | rcvd") && receivedMessage[1].equals("id | " + urlId)){
                 
                 // decrementar caso seja confirmaçao
                 multicastSubscriberCount--;
+                this.log.info(toString(), "Confirmacao de envio recebida! Restantes: " + multicastSubscriberCount);
             }
 
             // recebeu todas as confirmações
@@ -331,6 +338,27 @@ public class Downloader {
             return false;
         }
         
+
+        // criar um grupo multicast
+        try {
+            this.multicastGroup = InetAddress.getByName(this.multicastAddress);
+        } catch (UnknownHostException e){
+            this.log.error(toString(), "Nao foi possivel encontrar '" + this.multicastAddress + "'!");
+            return false;
+        } catch (SecurityException e){
+            this.log.error(toString(), "Um SecurityManager nao permitiu a ligacao a '" + this.multicastAddress + "'!");
+            return false;
+        }
+
+        // juntar ao grupo multicast
+        try {
+            this.multicastSocket.joinGroup(this.multicastGroup);
+        } catch (IOException e){
+            this.log.error(toString(), "Ocorreu um erro a juntar ao grupo multicast!");
+            return false;
+        }
+
+
         // Handeling de URLs
         Url url = null;
         try {
@@ -350,15 +378,15 @@ public class Downloader {
                     this.log.info(toString(), "'" + url + "'. Foi analisado.");
                 }
 
-                // iterar por todos os novos URLs retirados do URL principal
-                for (String childUrl: this.urls) {
-                    this.log.info(toString(), "A analisar '" + url + "'.");
+                // // iterar por todos os novos URLs retirados do URL principal
+                // for (String childUrl: this.urls) {
+                //     this.log.info(toString(), "A analisar '" + url + "'.");
 
-                    // analisar o website em URL e extrair as palavras para o indice
-                    if (this.extractWords(childUrl)) {
-                        this.log.info(toString(), "'" + url + "'. Foi analisado.");
-                    }
-                }
+                //     // analisar o website em URL e extrair as palavras para o indice
+                //     if (this.extractWords(childUrl)) {
+                //         this.log.info(toString(), "'" + url + "'. Foi analisado.");
+                //     }
+                // }
 
                 // enviar a mensagem para os Barrels
                 System.out.println(wordIndex); //TODO: PRINT DE DEBUG

@@ -33,6 +33,8 @@ public class Client{
      */
     public void searchMenu(Scanner sc, SearchResponse searchModuleIF){
 
+        sc.nextLine();
+
         String response;
 
         while (true){
@@ -77,6 +79,8 @@ public class Client{
      * @param sc o {@code Scanner} de input ligado ao {@code stdin}
      */
     public void sendURL(Scanner sc, SearchResponse searchModuleIF){
+
+        sc.nextLine();
 
         while (true){
 
