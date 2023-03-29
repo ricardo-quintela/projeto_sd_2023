@@ -127,7 +127,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
 
 
-    public String execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException{
+    public CopyOnWriteArrayList<String> execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException{
         
         log.info(toString(), "Recebida query de " + name);
 
@@ -141,7 +141,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 // ligar ao server registado no rmiEndpoint fornecido
                 QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
                 
-                String response = barrel.execQuery(query);   
+                CopyOnWriteArrayList<String> response = barrel.execQuery(query);   
                 
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;
@@ -196,7 +196,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         return valorBarrels + " Barrels disponiveis e " + valorDownloaders + " Downloaders disponiveis";
     }
 
-    public String searchUrl(String name, String query){
+    public CopyOnWriteArrayList<String> searchUrl(String name, String query){
 
         log.info(toString(), "Recebida query de " + name);
 
@@ -210,7 +210,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 // ligar ao server registado no rmiEndpoint fornecido
                 QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
                 
-                String response = barrel.execURL(query);   
+                CopyOnWriteArrayList<String> response = barrel.execURL(query);   
 
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;

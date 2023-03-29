@@ -15,9 +15,9 @@ public interface QueryIf extends Remote{
      * @return o conjunto de links em que as palavras aparecem
      * @throws RemoteException se ocorrer um erro do lado do server
      */
-    public String execQuery(CopyOnWriteArrayList<String> query) throws RemoteException;
+    public CopyOnWriteArrayList<String> execQuery(CopyOnWriteArrayList<String> query) throws RemoteException;
 
 
-    public String execURL(String url) throws RemoteException;
+    public CopyOnWriteArrayList<String> execURL(String url) throws RemoteException;
 
 }

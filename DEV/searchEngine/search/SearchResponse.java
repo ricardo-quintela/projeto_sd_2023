@@ -18,7 +18,7 @@ public interface SearchResponse extends Remote {
      * @return uma {@code String} contendo a pesquisa realizada pelo {@code Barrel}
      * @throws RemoteException caso haja um erro no RMI
      */
-    public String execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException;
+    public CopyOnWriteArrayList<String> execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException;
 
 
     /**
@@ -57,7 +57,7 @@ public interface SearchResponse extends Remote {
     public boolean login(String name, String password) throws RemoteException;
 
 
-    public String searchUrl(String name, String query) throws RemoteException;
+    public CopyOnWriteArrayList<String> searchUrl(String name, String query) throws RemoteException;
 
 
     public String admin() throws RemoteException;
