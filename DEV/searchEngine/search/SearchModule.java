@@ -306,8 +306,17 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             stmt = conn.createStatement();
 
             // Insere na base de dados
-            String sqlINSERT = "INSERT INTO users(nome, password) VALUES('" + nome + "', '" + password + "')";
-            stmt.executeUpdate(sqlINSERT);
+            String sql = "SELECT * FROM users WHERE nome = '" + nome + "'";
+            ResultSet rs = stmt.executeQuery(sql);
+
+            if (rs.next()){
+                check = false;
+            }
+            else {
+                String sqlINSERT = "INSERT INTO users(nome, password) VALUES('" + nome + "', '" + password + "')";
+                stmt.executeUpdate(sqlINSERT);
+            }
+
         } catch (SQLException e1){
             System.out.println("Erro na inserção.");
         } catch (Exception e) {
@@ -339,12 +348,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         try {
 
-            File dataBaseFile = new File(this.fileDataBase.getName());
+            File dataBaseFile = new File(this.fileDataBase.getAbsolutePath());
             Class.forName("org.sqlite.JDBC");
 
             
             if (dataBaseFile.exists()){
-                conn = DriverManager.getConnection("jdbc:sqlite:" + dataBaseFile.getAbsolutePath());
+                conn = DriverManager.getConnection("jdbc:sqlite:" + this.fileDataBase.getAbsolutePath());
                 System.out.println("Conexão estabelecida com sucesso!");
                 stmt = conn.createStatement();
             }
@@ -352,7 +361,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 File folder = new File("../DataBase");
                 folder.mkdir();
                 dataBaseFile.createNewFile();
-                conn = DriverManager.getConnection("jdbc:sqlite:" + dataBaseFile.getAbsolutePath());
+                conn = DriverManager.getConnection("jdbc:sqlite:" + this.fileDataBase.getAbsolutePath());
                 System.out.println("Conexão estabelecida com sucesso!");
 
                 // Criar a tabela

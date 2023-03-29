@@ -135,7 +135,7 @@ public class Client{
                 return true;
             } 
             else {
-                System.out.print("Erro no login.");
+                System.out.println("Erro no login.");
             }
         } catch (RemoteException e){
             ;
@@ -189,7 +189,7 @@ public class Client{
         int num;
         while (loop){
 
-            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - Registar\n4 - Login\n5 - sair\nDigite: ");
+            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - Registar\n4 - Login\n5 - Logout\n6 - Sair\nDigite: ");
 
             try{
                 
@@ -226,9 +226,17 @@ public class Client{
                             System.out.println("Logado com sucesso.");
                         }
                         break;
+                    
+                    case 5:
+                        if (this.name == null) {
+                            System.out.println("Não estás logado.");
+                        }
+                        this.name = null;
+                        System.out.println("Deslogado.");
+                        break;
 
                     // sair
-                    case 5:
+                    case 6:
                         loop = false;
                         break;
 
