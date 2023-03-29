@@ -46,11 +46,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         this.rmiEndpoint = rmiEndpoint;
         this.log = new Log();
 
-        this.multicastSocket = new MulticastSocket(multicastPort);
-        this.multicastAddress = multicastAddress;
-        this.multicastPort = multicastPort;
-        this.multicastThread = new Thread(this);
-        this.multicastThread.start();
+        // this.multicastSocket = new MulticastSocket(multicastPort);
+        // this.multicastAddress = multicastAddress;
+        // this.multicastPort = multicastPort;
+        // this.multicastThread = new Thread(this);
+        // this.multicastThread.start();
 
     }
 
@@ -90,6 +90,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             log.error(toString(), "Um SecurityManager nao permitiu juntar ao grupo multicast!");
             return;
         }
+    }
+
+    public String execURL(String url) throws RemoteException{
+        System.out.println("Recebi - " + url);
+        return "Chegou!";
     }
 
     @Override
@@ -213,7 +218,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             printUsage();
             return;
         }
-        if (args.length > 4) {
+        if (args.length != 4) {
             printUsage();
             return;
         }
@@ -223,7 +228,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         int multicastPort;
         try {
             rmiPort = Integer.parseInt(args[0]);
-            multicastPort = Integer.parseInt(args[2]);
+            multicastPort = Integer.parseInt(args[3]);
         } catch (NumberFormatException e) {
             printUsage();
             return;
@@ -238,7 +243,6 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         Barrel barrel;
         try {
             barrel = new Barrel(rmiPort, args[1], args[2], multicastPort);
-
         } catch (RemoteException e) {
             System.out.println("Erro: Ocorreu um erro de RMI ao criar o Barrel!");
             return;

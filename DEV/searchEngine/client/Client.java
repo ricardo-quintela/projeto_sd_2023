@@ -28,6 +28,44 @@ public class Client{
         this.name = name;
     }
 
+    public void searchURL(SearchResponse searchModuleIF){
+
+        String response;
+        Scanner sc = new Scanner(System.in);
+
+        while (true){
+
+            System.out.print("Googol - Pesquisa\nDigite um url para pesquisar e '/back' para voltar atras.\nDigite: ");
+            
+            // ler uma linha do stdin
+            String query = sc.nextLine();
+            
+            // voltar atrás no menu
+            if (query.equals("/back")){
+                break;
+            }
+
+            // pedir a um barrel para executar a query
+            try {
+
+                response = searchModuleIF.searchUrl(this.name, query);
+
+                // caso o pedido não possa ser executado
+                if (response == null){
+                    System.out.println("Erro: Nao houve resposta para o pedido!");
+                    continue;
+                }
+
+            } catch (RemoteException e) {
+                System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
+                continue;
+            }
+
+            // imprimir a resposta recebida
+            System.out.println(response);
+        }
+    }
+
     /**
      * Pede ao utilizador por uma string de palavras chave para pesquisar
      */
@@ -189,7 +227,7 @@ public class Client{
         int num;
         while (loop){
 
-            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - Registar\n4 - Login\n5 - Logout\n6 - Sair\nDigite: ");
+            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - Registar\n4 - Login\n5 - Logout\n6 - Lista de paginas\n7 - Sair\nDigite: ");
 
             try{
                 
@@ -217,7 +255,7 @@ public class Client{
                         }
                         break;
                     
-                    // loagr
+                    // logar
                     case 4:
                         if (this.name != null) {
                             System.out.println("Já estás logado.");
@@ -227,6 +265,7 @@ public class Client{
                         }
                         break;
                     
+                    // logout
                     case 5:
                         if (this.name == null) {
                             System.out.println("Não estás logado.");
@@ -234,9 +273,19 @@ public class Client{
                         this.name = null;
                         System.out.println("Deslogado.");
                         break;
+                    
+                    // lista de paginas ligadas a um url 
+                    case 6:
+                        if (this.name == null) {
+                            System.out.println("Não estás logado.");
+                        }
+                        else {
+                            this.searchURL(searchModuleIF);
+                        }
+                        break;
 
                     // sair
-                    case 6:
+                    case 7:
                         loop = false;
                         break;
 
@@ -295,12 +344,6 @@ public class Client{
 
             // ligar ao server registado no rmiEndpoint fornecido
             searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(port).lookup(rmiEndpoint);
-
-            // UrlQueueInterface ligacaoUrlQueue = (UrlQueueInterface) Naming.lookup(TratamentoStrings.urlTratamento(port, rmiEndpoint));
-            // System.out.println(ligacaoUrlQueue.isEmpty());
-            // ligacaoUrlQueue.add("url1");
-            // System.out.println(ligacaoUrlQueue.isEmpty());
-            // System.out.println(ligacaoUrlQueue.get(0));
 
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + rmiEndpoint + "'!");

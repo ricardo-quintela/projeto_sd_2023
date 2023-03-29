@@ -165,13 +165,53 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     }
 
+    public String searchUrl(String name, String query){
+        int barrelIndex = 0;
 
-    public boolean execURL(String name) throws RemoteException{
+        log.info(toString(), "Recebida query de " + name);
+
+        // tentar com todos os barrels
+        while (barrelIndex < this.barrel_ports.size()){
+
+
+            try {
+
+                // ligar ao server registado no rmiEndpoint fornecido
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(barrelIndex)).lookup(this.barrel_endpoints.get(barrelIndex));
+
+                // retornar a resposta para o cliente
+                return barrel.execURL(query);   
+                
+            } catch (NotBoundException e) {
+                log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(barrelIndex) + "'!");
+
+                barrelIndex += 1;
+                continue;
+    
+            } catch (AccessException e) {
+
+                log.error(toString(), "Esta máquina nao tem permissões para ligar ao endpoint '" + this.barrel_endpoints.get(barrelIndex) + "'!");
+                barrelIndex += 1;
+                continue;
+
+            } catch (RemoteException e) {
+
+                log.error(toString(), this.barrel_ports.get(barrelIndex) + "/" + this.barrel_endpoints.get(barrelIndex) + " nao esta disponivel.");
+                barrelIndex += 1;
+                continue;
+            }
+
+        }
+
+        return null;
+    }
+
+    public boolean execURL(String url) throws RemoteException{
         
         try {
             // ligar ao server da fila de urls registado no rmiEndpoint fornecido
             UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(this.rmiPortQueue).lookup(this.rmiEndpointQueue);
-            urlqueue.add(name);
+            urlqueue.add(url);
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + this.rmiEndpointQueue + "'!");
             return false;

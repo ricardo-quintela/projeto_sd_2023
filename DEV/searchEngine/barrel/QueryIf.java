@@ -17,4 +17,7 @@ public interface QueryIf extends Remote{
      */
     public String execQuery(CopyOnWriteArrayList<String> query) throws RemoteException;
 
+
+    public String execURL(String url) throws RemoteException;
+
 }
