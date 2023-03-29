@@ -26,10 +26,40 @@ public interface SearchResponse extends Remote {
      * 
      * <br>
      * 
-     * @param name o nome do cliente
-     * @param query a lista de palavras-chave
+     * @param url url a ser adicionado
      * @return true caso o URL seja adicionado à fila; false caso contrário
      * @throws RemoteException caso haja um erro no RMI
      */
-    public boolean execURL(String name) throws RemoteException;
+    public boolean execURL(String url) throws RemoteException;
+
+
+    /**
+     * 
+     * Tenta registar um novo utilizador na base de dados.
+     * 
+     * @param name
+     * @param password
+     * @return
+     * @throws RemoteException
+     */
+    public boolean register(String name, String password) throws RemoteException;
+    
+
+    /**
+     * 
+     * Tenta encontrar um utilizador na base de dados.
+     * 
+     * @param name
+     * @param password
+     * @return
+     * @throws RemoteException
+     */
+    public boolean login(String name, String password) throws RemoteException;
+
+
+    public String searchUrl(String name, String query) throws RemoteException;
+
+
+    public String admin() throws RemoteException;
+
 }

@@ -29,4 +29,6 @@ public interface UrlQueueInterface extends Remote {
      * @throws RemoteException
      */
     public boolean isEmpty() throws RemoteException;
+
+    public int getNumDownloaders() throws RemoteException;
 }

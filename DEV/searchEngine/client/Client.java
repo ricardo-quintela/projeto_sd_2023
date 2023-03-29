@@ -17,6 +17,7 @@ public class Client{
      * Construtor por omissão da classe {@code Client}
      */
     public Client(){
+        this.name = null;
     }
 
     /**
@@ -27,13 +28,73 @@ public class Client{
         this.name = name;
     }
 
-    /**
-     * Pede ao utilizador por uma string de palavras chave para pesquisar
-     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
-     */
-    public void searchMenu(Scanner sc, SearchResponse searchModuleIF){
+    public void searchURL(SearchResponse searchModuleIF){
 
         String response;
+        Scanner sc = new Scanner(System.in);
+
+        while (true){
+
+            System.out.print("Googol - Pesquisa\nDigite um url para pesquisar e '/back' para voltar atras.\nDigite: ");
+            
+            // ler uma linha do stdin
+            String query = sc.nextLine();
+            
+            // voltar atrás no menu
+            if (query.equals("/back")){
+                break;
+            }
+
+            // pedir a um barrel para executar a query
+            try {
+
+                response = searchModuleIF.searchUrl(this.name, query);
+
+                // caso o pedido não possa ser executado
+                if (response == null){
+                    System.out.println("Erro: Nao houve resposta para o pedido!");
+                    continue;
+                }
+
+            } catch (RemoteException e) {
+                System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
+                continue;
+            }
+
+            // imprimir a resposta recebida
+            System.out.println(response);
+        }
+    }
+
+    public void administracao(SearchResponse searchModuleIF){
+
+        // pedir a informacao atual
+        String response = null;
+
+        try {
+
+            response = searchModuleIF.admin();
+
+            // caso o pedido não possa ser executado
+            if (response == null){
+                System.out.println("Erro: Nao houve resposta para o pedido!");
+            }
+
+        } catch (RemoteException e) {
+            System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
+        }
+
+        // imprimir a resposta recebida
+        System.out.println(response);
+    }
+
+    /**
+     * Pede ao utilizador por uma string de palavras chave para pesquisar
+     */
+    public void searchMenu(SearchResponse searchModuleIF){
+
+        String response;
+        Scanner sc = new Scanner(System.in);
 
         while (true){
 
@@ -68,15 +129,15 @@ public class Client{
 
             // imprimir a resposta recebida
             System.out.println(response);
-
         }
     }
 
     /**
      * Pede ao utilizador um URL e envia ao SearchModule para pesquisar.
-     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
      */
-    public void sendURL(Scanner sc, SearchResponse searchModuleIF){
+    public void sendURL(SearchResponse searchModuleIF){
+
+        Scanner sc = new Scanner(System.in);
 
         while (true){
 
@@ -109,16 +170,86 @@ public class Client{
     }
 
     /**
-     * Menu de utilizador
-     * @param sc o {@code Scanner} de input ligado ao {@code stdin}
+     * Tentamos logar alguem na base de dados.
+     * 
+     * @return true em caso de login bem sucedido
      */
-    public void menu(Scanner sc, SearchResponse searchModuleIF){
+    public boolean logar(SearchResponse searchModuleIF){
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Username: ");
+        
+        // ler uma linha do stdin
+        String username = sc.nextLine();
+
+        System.out.print("Password: ");
+        
+        // ler uma linha do stdin
+        String password = sc.nextLine();
+        
+        // voltar atrás no menu
+        try {
+            if (searchModuleIF.login(username, password)){
+                this.name  = username;
+                return true;
+            } 
+            else {
+                System.out.println("Erro no login.");
+            }
+        } catch (RemoteException e){
+            ;
+        }
+
+        return false;
+    }
+
+    /**
+     * Tentamos registar alguem na base de dados.
+     * 
+     * @return true em caso de registo bem sucedido
+     */
+    public boolean registo(SearchResponse searchModuleIF){
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Username: ");
+        
+        // ler uma linha do stdin
+        String username = sc.nextLine();
+
+        System.out.print("Password: ");
+        
+        // ler uma linha do stdin
+        String password = sc.nextLine();
+        
+        // voltar atrás no menu
+        try{
+            if (searchModuleIF.register(username, password)){
+                return true;
+            }
+            else {
+                System.out.printf("Erro no registo.");
+            }
+        } catch (RemoteException e){
+            ;
+        }
+
+        return false;
+    }
+
+    /**
+     * Menu de utilizador
+     */
+    public void menu(SearchResponse searchModuleIF){
+
+        Scanner sc = new Scanner(System.in);
 
         boolean loop = true;
         int num;
         while (loop){
 
-            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - sair\nDigite: ");
+            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - Registar\n4 - Login\n5 - Logout\n6 - Lista de paginas\n7 - Administracao\n8 - Sair\nDigite: ");
 
             try{
                 
@@ -128,16 +259,60 @@ public class Client{
 
                     // indexar um URL
                     case 1:
-                        this.sendURL(sc, searchModuleIF);
+                        this.sendURL(searchModuleIF);
                         break;
 
                     // pesquisar
                     case 2:
-                        this.searchMenu(sc, searchModuleIF);
+                        this.searchMenu(searchModuleIF);
+                        break;
+
+                    // registar
+                    case 3:
+                        if (this.name != null) {
+                            System.out.println("Já estás logado.");
+                        }
+                        else if (this.registo(searchModuleIF)){
+                            System.out.println("Registado com sucesso.");
+                        }
+                        break;
+                    
+                    // logar
+                    case 4:
+                        if (this.name != null) {
+                            System.out.println("Já estás logado.");
+                        }
+                        else if (this.logar(searchModuleIF)){
+                            System.out.println("Logado com sucesso.");
+                        }
+                        break;
+                    
+                    // logout
+                    case 5:
+                        if (this.name == null) {
+                            System.out.println("Não estás logado.");
+                        }
+                        this.name = null;
+                        System.out.println("Deslogado.");
+                        break;
+                    
+                    // lista de paginas ligadas a um url 
+                    case 6:
+                        if (this.name == null) {
+                            System.out.println("Não estás logado.");
+                        }
+                        else {
+                            this.searchURL(searchModuleIF);
+                        }
+                        break;
+                    
+                    // administracao
+                    case 7:
+                        this.administracao(searchModuleIF);
                         break;
 
                     // sair
-                    case 3:
+                    case 8:
                         loop = false;
                         break;
 
@@ -153,6 +328,8 @@ public class Client{
 
         }
 
+        sc.close();
+
     }
 
 
@@ -160,7 +337,7 @@ public class Client{
      * Imprime no {@code stdin} o modo de uso do programa
      */
     private static void printUsage() {
-        System.out.println("Modo de uso:\nClient {rmi_port} {rmi_endpoint} {username}\n- rmi_port: Porta do registo RMI do SearchModule\n- rmi_endpoint: Endpoint do SearchModule no registo RMI\n- username: O nome do cliente");
+        System.out.println("Modo de uso:\nClient {rmi_port} {rmi_endpoint} {username}\n- rmi_port: Porta do registo RMI do SearchModule\n- rmi_endpoint: Endpoint do SearchModule no registo RMI");
     }
 
 
@@ -172,7 +349,7 @@ public class Client{
             return;
         }
         
-        if (args.length != 3){
+        if (args.length != 2){
             printUsage();
             return;
         }
@@ -195,12 +372,6 @@ public class Client{
             // ligar ao server registado no rmiEndpoint fornecido
             searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(port).lookup(rmiEndpoint);
 
-            // UrlQueueInterface ligacaoUrlQueue = (UrlQueueInterface) Naming.lookup(TratamentoStrings.urlTratamento(port, rmiEndpoint));
-            // System.out.println(ligacaoUrlQueue.isEmpty());
-            // ligacaoUrlQueue.add("url1");
-            // System.out.println(ligacaoUrlQueue.isEmpty());
-            // System.out.println(ligacaoUrlQueue.get(0));
-
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + rmiEndpoint + "'!");
             return;
@@ -212,15 +383,10 @@ public class Client{
             return;
         }
 
-        Client client = new Client(args[2]);
-
-        // instanciar um scanner
-        Scanner sc = new Scanner(System.in);
+        Client client = new Client();
 
         // menu da aplicação
-        client.menu(sc, searchModuleIF);
+        client.menu(searchModuleIF);
         
-        sc.close();
-
     }
 }
