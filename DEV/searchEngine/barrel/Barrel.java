@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import java.net.DatagramPacket;
@@ -14,8 +15,16 @@ import java.net.DatagramPacket;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.InetSocketAddress;
+import java.io.File;
 
 import searchEngine.utils.Log;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 
 public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
@@ -29,6 +38,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
     private String rmiEndpoint;
 
     private Log log;
+
+    private File databaseFile;
 
     /**
      * Construtor por omissão da classe {@code Barrel}
@@ -45,6 +56,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         this.rmiPort = rmiPort;
         this.rmiEndpoint = rmiEndpoint;
         this.log = new Log();
+
+        this.databaseFile = new File("../DataBase/" + this.rmiPort + "_" + this.rmiEndpoint + ".db");
 
         // this.multicastSocket = new MulticastSocket(multicastPort);
         // this.multicastAddress = multicastAddress;
@@ -108,6 +121,206 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         log.info(toString(), "Query recebida: '" + query + "'");
 
         return this + ": " + string;
+    }
+
+
+    public boolean dataBaseInitialize(){
+
+        Connection conn = null;
+        Statement stmt = null;
+
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+
+            
+            if (this.databaseFile.exists()){
+                conn = DriverManager.getConnection("jdbc:sqlite:" + this.databaseFile.getAbsolutePath());
+                System.out.println("Conexão estabelecida com sucesso!");
+                stmt = conn.createStatement();
+            }
+            else {
+                File folder = new File("../DataBase");
+                folder.mkdir();
+                databaseFile.createNewFile();
+                conn = DriverManager.getConnection("jdbc:sqlite:" + this.databaseFile.getAbsolutePath());
+                System.out.println("Conexão estabelecida com sucesso!");
+
+                // Criar a tabela
+                stmt = conn.createStatement();
+                String sql = "CREATE TABLE palavras (" + 
+                                    "palavra TEXT," +
+                                    "numpesquisas INTEGER," +
+                                    "PRIMARY KEY(palavra)" +
+                                ");" +
+                                
+                                "CREATE TABLE link (" +
+                                    "url TEXT," +
+                                    "titulo TEXT," +
+                                   " texto TEXT," +
+                                   " msgid INTEGER," +
+                                    "numpesquisas INTEGER," +
+                                    "PRIMARY KEY(url)" +
+                                ");" +
+                                
+                                "CREATE TABLE palavras_link (" +
+                                    "palavras_palavra TEXT," +
+                                    "link_url TEXT," +
+                                    "PRIMARY KEY(palavras_palavra,link_url)" +
+                                ");";
+
+                stmt.executeUpdate(sql);
+                System.out.println("Criada as tabelas com sucesso.");
+            }
+
+            conn.close();
+            stmt.close();
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                // Fechar a conexão com o banco de dados
+                conn.close();
+                stmt.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+
+    public void searchdataBase(String url, String palavra){
+
+        Connection conn = null;
+        Statement stmt = null;
+
+        // Faz a conexao na base de dados e insere o que for pedido
+        try {
+            conn = DriverManager.getConnection("jdbc:sqlite:" + this.databaseFile.getAbsolutePath());
+            stmt = conn.createStatement();
+
+            if (url != null){
+                // Insere na base de dados
+                String sql = "SELECT * FROM palavras_link WHERE link_url = '" + url + "'";
+                ResultSet rs = stmt.executeQuery(sql);
+
+                while (rs.next()){
+                    System.out.println("Palavra: " + rs.next() + " Url: " + rs.next());
+                    sql = "UPDATE link SET numpesquisas = numpesquisas + 1 WHERE url = '" + url + "'";
+                    stmt.executeUpdate(sql);
+                }
+            }
+            else if (palavra != null){
+                // Insere na base de dados
+                String sql = "SELECT * FROM palavras_link WHERE palavras_palavra = '" + palavra + "'";
+                ResultSet rs = stmt.executeQuery(sql);
+
+                while (rs.next()){
+                    System.out.println("Palavra: " + rs.getString("palavras_palavra") + " Url: " + rs.getString("link_url"));
+                    sql = "UPDATE palavras SET numpesquisas = numpesquisas + 1 WHERE palavra = '" + palavra + "'";
+                    stmt.executeUpdate(sql);
+                }
+
+                sql = "SELECT * FROM palavras WHERE palavra = '" + palavra + "'";
+                rs = stmt.executeQuery(sql);
+
+                while (rs.next()){
+                    System.out.println("Palavra: " + rs.getString("palavra") + " Num: " + rs.getString("numpesquisas"));
+                }
+            }
+
+
+
+        } catch (SQLException e1){
+            e1.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                // Fechar a conexão com o banco de dados
+                conn.close();
+                stmt.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public boolean insertDataBase(int msgId, String url, ArrayList<String> palavras){
+
+        Connection conn = null;
+        Statement stmt = null;
+        boolean check = true;
+
+        // Faz a conexao na base de dados e insere o que for pedido
+        try {
+            conn = DriverManager.getConnection("jdbc:sqlite:" + this.databaseFile.getAbsolutePath());
+            stmt = conn.createStatement();
+
+            // Insere na base de dados
+            String sql = "SELECT * FROM link WHERE url = '" + url + "'";
+            ResultSet rs = stmt.executeQuery(sql);
+
+            if (rs.next()){
+                check = false;
+            }
+            else {
+                String sqlINSERT = "INSERT INTO link(url, titulo, texto, msgid, numpesquisas) VALUES('" + url + "', '', ''," + msgId + ", 0)";
+                stmt.executeUpdate(sqlINSERT);
+                System.out.println("Inserção nos links");
+            }
+
+            for (String word : palavras) {
+
+                // Insere na base de dados
+                sql = "SELECT * FROM palavras WHERE palavra = '" + word + "'";
+                rs = stmt.executeQuery(sql);
+
+                if (rs.next()){
+                    check = false;
+                }
+                else {
+                    String sqlINSERT = "INSERT INTO palavras(palavra, numpesquisas) VALUES('" + word + "', 0)";
+                    stmt.executeUpdate(sqlINSERT);
+                    System.out.println("Inserção nas palavras");
+                }
+
+                // Insere na base de dados
+                sql = "SELECT * FROM palavras_link WHERE palavras_palavra  = '" + word + "' and link_url = '" + url + "'";
+                rs = stmt.executeQuery(sql);
+
+                if (rs.next()){
+                    check = false;
+                }
+                else {
+                    String sqlINSERT = "INSERT INTO palavras_link(palavras_palavra, link_url) VALUES('" + word + "','" + url + "')";
+                    stmt.executeUpdate(sqlINSERT);
+                    System.out.println("Inserção nas palavras + links");
+                }
+            }
+
+        } catch (SQLException e1){
+            e1.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+            check = false;
+        } finally {
+            try {
+                // Fechar a conexão com o banco de dados
+                conn.close();
+                stmt.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                check = false;
+            }
+        }
+
+        return check;
     }
 
     /**
@@ -258,8 +471,20 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             return;
         }
 
+        if(!barrel.dataBaseInitialize()){
+            barrel.unexport();
+            barrel.closeSocket();
+            return;
+        }
+
+        ArrayList<String> palavras = new ArrayList<>();
+        palavras.add("ola");
+        palavras.add("adeus");
+        barrel.insertDataBase(1,"url", palavras);
+
+        barrel.searchdataBase(null, "ola");
+        System.out.println("PASSOU");
+
         barrel.closeSocket();
-
     }
-
 }
