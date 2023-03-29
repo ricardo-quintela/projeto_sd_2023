@@ -133,6 +133,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             
             // separar a mensagem por ";"
             receivedMessage = (new String(packet.getData(), 0, packet.getLength())).split(" *; *");
+
             // //TODO: DEBUG HEARTBEAT
             // System.out.println("================\n" + (new String(packet.getData(), 0, packet.getLength())).split(" *; *")[0] + "\n===================");
             
@@ -213,19 +214,41 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             // separar a mensagem por ";"
             receivedMessage = (new String(packet.getData(), 0, packet.getLength())).split(" *; *");
 
-            // //TODO: DEBUG MENSAGEM
-            // System.out.println("================\n" + (new String(packet.getData(), 0, packet.getLength())).split(" *; *")[0] + "\n===================");
+            //TODO: DEBUG MENSAGEM
+            System.out.println("================\n" + new String(packet.getData(), 0, packet.getLength()) + "\n===================");
 
             // verificar se a mensagem é uma confirmaçao de heartbeat
             if (receivedMessage.length > 0 && receivedMessage[0].equals("type | url_list")
                     && receivedMessage[1].equals("id | " + messageId)) {
 
-                this.log.info(toString(), "Mensagem " + messageId + " recebida!");
+                this.log.info(toString(), "Mensagem " + messageId + " recebida!"); 
 
                 try {
 
-                    numUrls = Integer.parseInt(receivedMessage[2].split(" *\\| *")[1]);
+                    try{
+                        numUrls = Integer.parseInt(receivedMessage[1].split(" *\\| *")[1]);
+                        String url = receivedMessage[2].split(" *\\| *")[1];
+                        String titulo = receivedMessage[3].split(" *\\| *")[1];
+                        String texto = receivedMessage[4].split(" *\\| *")[1];
+    
+                        CopyOnWriteArrayList<String> palavras = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
+                        CopyOnWriteArrayList<String> referenciasLinks = new CopyOnWriteArrayList<>(receivedMessage[6].split(" *\\| *")[1].split(" *, *"));
+                        
+                        this.insertDataBase(numUrls, url, palavras, referenciasLinks, titulo, texto);
+                    }
+                    catch (NumberFormatException e){
+                        this.log.error(toString(), "Nao e um numero");
+                        e.printStackTrace();
+                        return false;
+                    }
+                    catch (IndexOutOfBoundsException e){
+                        this.log.error(toString(), "Nao e um numero");
+                        e.printStackTrace();
+                        return false;
+                    }
 
+
+                    
                 } catch (NumberFormatException e) {
                     this.log.error(toString(), "Numero de URLs invalido!");
                     return false;
@@ -271,9 +294,9 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
 
         // TODO: PRINTS DE DEBUG PARA SABER SE RECEBEU A MENSAGEM
-        for (int i = 3; i < 3 + numUrls; i++) {
-            System.out.println("Mensagem recebida: " + receivedMessage[i]);
-        }
+        // for (int i = 3; i < 3 + numUrls; i++) {
+        //     System.out.println("Mensagem recebida: " + receivedMessage[i]);
+        // }
 
 
         return true;
@@ -484,7 +507,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
     }
 
-    public boolean insertDataBase(int msgId, String url, ArrayList<String> palavras, ArrayList<String> referencias){
+    public boolean insertDataBase(int msgId, String url, CopyOnWriteArrayList<String> palavras, CopyOnWriteArrayList<String> referencias, String titulo, String texto){
 
         Connection conn = null;
         Statement stmt = null;
@@ -503,7 +526,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 check = false;
             }
             else {
-                String sqlINSERT = "INSERT INTO link(url, titulo, texto, msgid, numpesquisas) VALUES('" + url + "', '', ''," + msgId + ", 0)";
+                String sqlINSERT = "INSERT INTO link(url, titulo, texto, msgid, numpesquisas) VALUES('" + url + "', '" + titulo + "', '" + texto + "'," + msgId + ", 0)";
                 stmt.executeUpdate(sqlINSERT);
                 System.out.println("Inserção nos links");
             }
@@ -731,19 +754,19 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             return;
         }
 
-        ArrayList<String> palavras = new ArrayList<>();
-        ArrayList<String> links = new ArrayList<>();
-        links.add("link1");
-        links.add("link2");
-        links.add("link3");
+        // ArrayList<String> palavras = new ArrayList<>();
+        // ArrayList<String> links = new ArrayList<>();
+        // links.add("link1");
+        // links.add("link2");
+        // links.add("link3");
 
-        palavras.add("ola");
-        palavras.add("adeus");
-        barrel.insertDataBase(1,"url", palavras, links);
+        // palavras.add("ola");
+        // palavras.add("adeus");
+        // barrel.insertDataBase(1,"url", palavras, links);
 
-        palavras.clear();
-        palavras.add("adeus");
-        barrel.insertDataBase(1,"url2", palavras, links);
+        // palavras.clear();
+        // palavras.add("adeus");
+        // barrel.insertDataBase(1,"url2", palavras, links);
 
         System.out.println("PASSOU");
 
