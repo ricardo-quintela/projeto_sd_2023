@@ -8,7 +8,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -490,14 +489,14 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             return;
         }
 
-        ArrayList<String> palavras = new ArrayList<>();
-        palavras.add("ola");
-        palavras.add("adeus");
-        barrel.insertDataBase(1,"url", palavras);
+        // ArrayList<String> palavras = new ArrayList<>();
+        // palavras.add("ola");
+        // palavras.add("adeus");
+        // barrel.insertDataBase(1,"url", palavras);
 
-        // palavras.add("as");
-        // barrel.searchdataBase(null, palavras);
-        System.out.println("PASSOU");
+        // // palavras.add("as");
+        // // barrel.searchdataBase(null, palavras);
+        // System.out.println("PASSOU");
 
         barrel.closeSocket();
     }
