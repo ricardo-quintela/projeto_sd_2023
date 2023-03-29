@@ -8,6 +8,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.io.File;
@@ -31,10 +32,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
      */
     private ArrayList<Integer> barrel_ports;
     private ArrayList<String> barrel_endpoints;
+    private ArrayList<Integer> ativos;
     private int rmiPort;
     private String rmiEndpoint;
     private int rmiPortQueue;
     private String rmiEndpointQueue;
+    private int barrelIndex;
 
     private Log log;
 
@@ -50,6 +53,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         // guardar os endpoints dos barrels
         this.barrel_ports = new ArrayList<Integer>();
         this.barrel_endpoints = new ArrayList<String>();
+        this.ativos = new ArrayList<Integer>();
+        this.barrelIndex = 0;
 
         this.log = new Log();
 
@@ -98,6 +103,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             for (int i = 2; i < lines.size(); i++) {
                 this.barrel_ports.add(Integer.parseInt(lines.get(i).split("/")[0]));
                 this.barrel_endpoints.add(lines.get(i).split("/")[1]);
+                this.ativos.add(1);
             }
 
         } catch (NumberFormatException e){
@@ -123,39 +129,42 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     public String execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException{
         
-        int barrelIndex = 0;
-
         log.info(toString(), "Recebida query de " + name);
 
         // tentar com todos os barrels
-        while (barrelIndex < this.barrel_ports.size()){
+        while (this.ativos.contains(1)){
 
+            if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
 
             try {
 
-    
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(barrelIndex)).lookup(this.barrel_endpoints.get(barrelIndex));
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
+                
+                String response = barrel.execQuery(query);   
+                
+                if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
+                this.barrelIndex ++;
 
                 // retornar a resposta para o cliente
-                return barrel.execQuery(query);   
+                return response;
                 
             } catch (NotBoundException e) {
-                log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(barrelIndex) + "'!");
-
-                barrelIndex += 1;
+                log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(this.barrelIndex) + "'!");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
                 continue;
     
             } catch (AccessException e) {
-
-                log.error(toString(), "Esta máquina nao tem permissões para ligar ao endpoint '" + this.barrel_endpoints.get(barrelIndex) + "'!");
-                barrelIndex += 1;
+                log.error(toString(), "Esta máquina nao tem permissões para ligar ao endpoint '" + this.barrel_endpoints.get(this.barrelIndex) + "'!");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
                 continue;
 
             } catch (RemoteException e) {
-
-                log.error(toString(), this.barrel_ports.get(barrelIndex) + "/" + this.barrel_endpoints.get(barrelIndex) + " nao esta disponivel.");
-                barrelIndex += 1;
+                log.error(toString(), this.barrel_ports.get(this.barrelIndex) + "/" + this.barrel_endpoints.get(this.barrelIndex) + " nao esta disponivel.");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
                 continue;
             }
 
@@ -165,39 +174,66 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     }
 
+    public String admin() throws RemoteException{
+
+        int valorDownloaders = 0, valorBarrels = 0;
+
+        try {
+            // ligar ao server da fila de urls registado no rmiEndpoint fornecido
+            UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(this.rmiPortQueue).lookup(this.rmiEndpointQueue);
+            valorBarrels = urlqueue.getNumDownloaders();
+        } catch (NotBoundException e) {
+            System.out.println("Erro: não existe um servidor registado no endpoint '" + this.rmiEndpointQueue + "'!");
+        } catch (AccessException e) {
+            System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + this.rmiEndpointQueue + "'!");
+        } catch (RemoteException e) {
+            System.out.println("Erro: Não foi possível encontrar o registo");
+        }
+
+        for (int i : this.ativos) {
+            if(i == 1) valorBarrels ++;
+        }
+        return valorBarrels + " Barrels disponiveis e " + valorDownloaders + " Downloaders disponiveis";
+    }
+
     public String searchUrl(String name, String query){
-        int barrelIndex = 0;
 
         log.info(toString(), "Recebida query de " + name);
 
         // tentar com todos os barrels
-        while (barrelIndex < this.barrel_ports.size()){
+        while (this.ativos.contains(1)){
 
+            if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
 
             try {
 
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(barrelIndex)).lookup(this.barrel_endpoints.get(barrelIndex));
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
+                
+                String response = barrel.execURL(query);   
+
+                if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
+                this.barrelIndex ++;
 
                 // retornar a resposta para o cliente
-                return barrel.execURL(query);   
+                return response;
                 
             } catch (NotBoundException e) {
-                log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(barrelIndex) + "'!");
-
-                barrelIndex += 1;
+                log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(this.barrelIndex) + "'!");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
                 continue;
     
             } catch (AccessException e) {
-
-                log.error(toString(), "Esta máquina nao tem permissões para ligar ao endpoint '" + this.barrel_endpoints.get(barrelIndex) + "'!");
-                barrelIndex += 1;
+                log.error(toString(), "Esta máquina nao tem permissões para ligar ao endpoint '" + this.barrel_endpoints.get(this.barrelIndex) + "'!");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
                 continue;
 
             } catch (RemoteException e) {
-
-                log.error(toString(), this.barrel_ports.get(barrelIndex) + "/" + this.barrel_endpoints.get(barrelIndex) + " nao esta disponivel.");
-                barrelIndex += 1;
+                log.error(toString(), this.barrel_ports.get(this.barrelIndex) + "/" + this.barrel_endpoints.get(this.barrelIndex) + " nao esta disponivel.");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
                 continue;
             }
 

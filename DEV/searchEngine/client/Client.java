@@ -66,6 +66,28 @@ public class Client{
         }
     }
 
+    public void administracao(SearchResponse searchModuleIF){
+
+        // pedir a informacao atual
+        String response = null;
+
+        try {
+
+            response = searchModuleIF.admin();
+
+            // caso o pedido não possa ser executado
+            if (response == null){
+                System.out.println("Erro: Nao houve resposta para o pedido!");
+            }
+
+        } catch (RemoteException e) {
+            System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
+        }
+
+        // imprimir a resposta recebida
+        System.out.println(response);
+    }
+
     /**
      * Pede ao utilizador por uma string de palavras chave para pesquisar
      */
@@ -227,7 +249,7 @@ public class Client{
         int num;
         while (loop){
 
-            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - Registar\n4 - Login\n5 - Logout\n6 - Lista de paginas\n7 - Sair\nDigite: ");
+            System.out.print("Googol\nDigite a opcao desejada:\n1 - Indexar um URL\n2 - Pesquisar\n3 - Registar\n4 - Login\n5 - Logout\n6 - Lista de paginas\n7 - Administracao\n8 - Sair\nDigite: ");
 
             try{
                 
@@ -283,9 +305,14 @@ public class Client{
                             this.searchURL(searchModuleIF);
                         }
                         break;
+                    
+                    // administracao
+                    case 7:
+                        this.administracao(searchModuleIF);
+                        break;
 
                     // sair
-                    case 7:
+                    case 8:
                         loop = false;
                         break;
 

@@ -70,9 +70,9 @@ public class Downloader {
 
         this.log = new Log();
 
-        this.multicastSocket = new MulticastSocket();
-        this.multicastAddress = multicastAddress;
-        this.multicastPort = multicastPort;
+        // this.multicastSocket = new MulticastSocket();
+        // this.multicastAddress = multicastAddress;
+        // this.multicastPort = multicastPort;
 
         this.urls = new LinkedBlockingQueue<>();
     }

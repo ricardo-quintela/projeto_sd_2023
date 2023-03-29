@@ -58,4 +58,8 @@ public interface SearchResponse extends Remote {
 
 
     public String searchUrl(String name, String query) throws RemoteException;
+
+
+    public String admin() throws RemoteException;
+
 }
