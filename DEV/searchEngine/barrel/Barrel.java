@@ -114,15 +114,15 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
     @Override
     public String execQuery(CopyOnWriteArrayList<String> query) throws RemoteException {
-        String string = "";
+        // String string = "";
 
-        for (String word : query) {
-            string += word + " ";
-        }
+        // for (String word : query) {
+        //     string += word + " ";
+        // }
 
-        log.info(toString(), "Query recebida: '" + query + "'");
+        // log.info(toString(), "Query recebida: '" + query + "'");
 
-        return this + ": " + string;
+        return this.searchdataBase(null, query);
     }
 
 
@@ -195,10 +195,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
     }
 
 
-    public void searchdataBase(String url, ArrayList<String> palavras){
+    public String searchdataBase(String url, CopyOnWriteArrayList<String> palavras){
 
         Connection conn = null;
         Statement stmt = null;
+        String retornar = "";
 
         // Faz a conexao na base de dados e insere o que for pedido
         try {
@@ -211,7 +212,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 ResultSet rs = stmt.executeQuery(sql);
 
                 while (rs.next()){
-                    System.out.println("Palavra: " + rs.next() + " Url: " + rs.next());
+                    retornar += rs.getString("palavras_palavra") + " ";
                     sql = "UPDATE link SET numpesquisas = numpesquisas + 1 WHERE url = '" + url + "'";
                     stmt.executeUpdate(sql);
                 }
@@ -238,7 +239,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
                 for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
                     if (entry.getValue() == palavras.size()){
-                        System.out.println(entry.getKey());
+                        retornar += entry.getKey() + " ";
                     }
                 }
             }
@@ -258,6 +259,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 e.printStackTrace();
             }
         }
+
+        return retornar;
 
     }
 
@@ -492,8 +495,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         palavras.add("adeus");
         barrel.insertDataBase(1,"url", palavras);
 
-        palavras.add("as");
-        barrel.searchdataBase(null, palavras);
+        // palavras.add("as");
+        // barrel.searchdataBase(null, palavras);
         System.out.println("PASSOU");
 
         barrel.closeSocket();
