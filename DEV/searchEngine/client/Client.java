@@ -178,6 +178,8 @@ public class Client{
 
         Scanner sc = new Scanner(System.in);
 
+        sc.nextLine();
+
         while (true){
 
             if (this.lastSearch == null){

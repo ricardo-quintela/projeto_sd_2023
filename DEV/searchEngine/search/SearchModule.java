@@ -395,6 +395,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         } catch (SQLException e1){
             System.out.println("Erro na inserção.");
+            e1.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
             check = false;

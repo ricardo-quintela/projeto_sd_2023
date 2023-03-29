@@ -35,6 +35,9 @@ DataBase
 # vscode
 .vscode/
 
+# databae
+DataBase/
+
 # sources
 sources.txt
 source.txt

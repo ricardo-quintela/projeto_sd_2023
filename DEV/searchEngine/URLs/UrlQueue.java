@@ -13,11 +13,12 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
-    private BlockingQueue<String> urls;
+    private BlockingQueue<Url> urls;
     
     private int rmiPort;
     private String rmiEndpoint;
     private Log log;
+    private int urlCounter;
 
     private int numDownloaders;
 
@@ -26,7 +27,8 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
      * @throws RemoteException caso ocorra um erro no RMI
      */
     public UrlQueue() throws RemoteException{
-        this.urls = new LinkedBlockingQueue<String>();
+        this.urls = new LinkedBlockingQueue<Url>();
+        this.urlCounter = 0;
     }
 
     /**
@@ -36,10 +38,11 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
      * @throws RemoteException caso ocorra um erro no RMI
      */
     public UrlQueue(int rmiPort, String rmiEndpoint) throws RemoteException {
-        this.urls = new LinkedBlockingQueue<String>();
+        this.urls = new LinkedBlockingQueue<Url>();
         this.rmiPort = rmiPort;
         this.rmiEndpoint = rmiEndpoint;
         this.log = new Log();
+        this.urlCounter = 0;
         this.numDownloaders = 0;
     }
     
@@ -49,22 +52,26 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     }
 
     public void add(String url) throws RemoteException {
-        System.out.println("Url adicionado à fila: " + url);
+        this.log.info(toString(), "Url adicionado à fila: " + url);
+
         try {
-            urls.put(url);
+            urls.put(new Url(url, ++urlCounter));
+            
         } catch (InterruptedException e) {
+            this.log.error(toString(), "Nao foi possivel adicionar '" + url + "' a fila!");
             return;
         }
     }
 
 
-    public String remove(String downloader) throws RemoteException {
+    public Url remove(String downloader) throws RemoteException {
         try {
             this.numDownloaders ++;
-            String url = urls.take();
+            Url url = urls.take();
             this.numDownloaders --;
             this.log.error(toString(), "Url removida da fila por " + downloader + ": " + url);
             return url;
+            
         } catch (InterruptedException e) {
             this.log.error(toString(), "Registo estava interrompido");
             return null;
