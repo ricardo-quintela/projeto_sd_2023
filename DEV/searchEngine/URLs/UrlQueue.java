@@ -20,6 +20,7 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     private Log log;
     private int urlCounter;
 
+    private int numDownloaders;
 
     /**
      * Construtor por omissão da classe UrlQueue
@@ -42,8 +43,13 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
         this.rmiEndpoint = rmiEndpoint;
         this.log = new Log();
         this.urlCounter = 0;
+        this.numDownloaders = 0;
     }
     
+
+    public int getNumDownloaders() throws RemoteException {
+        return this.numDownloaders;
+    }
 
     public void add(String url) throws RemoteException {
         this.log.info(toString(), "Url adicionado à fila: " + url);
@@ -60,9 +66,12 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
 
     public Url remove(String downloader) throws RemoteException {
         try {
+            this.numDownloaders ++;
             Url url = urls.take();
+            this.numDownloaders --;
             this.log.error(toString(), "Url removida da fila por " + downloader + ": " + url);
             return url;
+            
         } catch (InterruptedException e) {
             this.log.error(toString(), "Registo estava interrompido");
             return null;

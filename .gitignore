@@ -29,6 +29,9 @@ bin/
 lib/
 jsoup-*.jar
 
+# database
+DataBase
+
 # vscode
 .vscode/
 
