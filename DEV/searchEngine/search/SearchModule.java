@@ -131,38 +131,43 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         
         log.info(toString(), "Recebida query de " + name);
 
-        CopyOnWriteArrayList<String> response_par = null, response_impar = null;
+        CopyOnWriteArrayList<String> response_par = new CopyOnWriteArrayList<>(), response_impar = new CopyOnWriteArrayList<>();
         boolean par = false, impar = false;
-        int index = -1;
 
         // tentar com todos os barrels
+        int count = 0;
         while (this.ativos.contains(1)){
 
             if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
+            count ++;
 
             try {
                 // ligar ao server registado no rmiEndpoint fornecido
                 QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));                
-
+                
                 if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
                     par = true;
                     response_par = barrel.execQuery(query);
-                    index = this.barrelIndex;
                 }
                 else {
                     impar = true;
                     response_impar = barrel.execQuery(query);
-                    index = this.barrelIndex;
                 }
-
+                
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;
 
                 // retornar a resposta para o cliente
-                if (par && impar || index == this.barrelIndex) {
+                if ((par && impar) || (count >= this.barrel_ports.size())) {
                     CopyOnWriteArrayList<String> response = new CopyOnWriteArrayList<>();
                     response.addAll(response_par);
                     response.addAll(response_impar);
+
+                    // tens os links de todas as palavras
+                    // so podes retornar os links que estao ligados a todas as palavras ao mesmo tempo
+                    // count dos links == numero de palavras enviadas (size da querry)
+                    // no barrel tirar a verificação lá 
+
                     return response;
                 }
                 
