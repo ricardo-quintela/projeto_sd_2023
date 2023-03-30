@@ -97,7 +97,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         this.running = state;
     }
 
-    public String getDataBaseFile() {
+    public String getDataBaseFile() throws RemoteException{
         return this.databaseFile.getAbsolutePath();
     }
 
@@ -739,6 +739,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
         } catch (RemoteException e) {
             System.out.println("Erro: Ocorreu um erro de RMI ao criar o Barrel!");
+            e.printStackTrace();
             return;
         } catch (IOException e) {
             System.out.println("Erro: Ocorreu um erro no MulticastSocket ao criar o Barrel!");
