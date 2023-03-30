@@ -234,7 +234,19 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                         CopyOnWriteArrayList<String> palavras = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
                         CopyOnWriteArrayList<String> referenciasLinks = new CopyOnWriteArrayList<>(receivedMessage[6].split(" *\\| *")[1].split(" *, *"));
                         
-                        this.insertDataBase(numUrls, url, palavras, referenciasLinks, titulo, texto);
+                        CopyOnWriteArrayList<String> palavras_certas = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
+
+                        for (String palavra : palavras) {
+                            int diff = palavra.charAt(0) - 'm';
+         
+                            if (this.rmiPort % 2 == 0) {
+                                if (diff <= 0) palavras_certas.add(palavra);
+                            } else {
+                                if (diff > 0) palavras_certas.add(palavra);
+                            }
+                        }
+
+                        this.insertDataBase(numUrls, url, palavras_certas, referenciasLinks, titulo, texto);
                     }
                     catch (NumberFormatException e){
                         this.log.error(toString(), "Nao e um numero");
@@ -474,7 +486,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                     sql = "UPDATE palavras SET numpesquisas = numpesquisas + 1 WHERE palavra = '" + word + "'";
                     stmt.executeUpdate(sql);
                 }
-
+                
                 Map<String, Long> couterMap = urlsEncontrados.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
 
                 for (Map.Entry<String, Long> entry : couterMap.entrySet()) {

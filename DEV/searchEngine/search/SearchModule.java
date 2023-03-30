@@ -131,23 +131,37 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         
         log.info(toString(), "Recebida query de " + name);
 
+        CopyOnWriteArrayList<String> response_par = null, response_impar = null;
+        boolean par = false, impar = false;
+
         // tentar com todos os barrels
         while (this.ativos.contains(1)){
 
             if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
 
             try {
-
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
-                
-                CopyOnWriteArrayList<String> response = barrel.execQuery(query);   
-                
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));                
+
+                if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
+                    par = true;
+                    response_par = barrel.execQuery(query);
+                }
+                else {
+                    impar = true;
+                    response_impar = barrel.execQuery(query);
+                }
+
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;
 
                 // retornar a resposta para o cliente
-                return response;
+                if (par && impar) {
+                    CopyOnWriteArrayList<String> response = new CopyOnWriteArrayList<>();
+                    response.addAll(response_par);
+                    response.addAll(response_impar);
+                    return response;
+                }
                 
             } catch (NotBoundException e) {
                 log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(this.barrelIndex) + "'!");
