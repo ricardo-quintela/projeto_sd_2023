@@ -97,6 +97,10 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         this.running = state;
     }
 
+    public String getDataBaseFile() {
+        return this.databaseFile.getAbsolutePath();
+    }
+
     public boolean receiveMessage() {
 
         DatagramPacket packet;
@@ -483,27 +487,25 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                     ResultSet rs = stmt.executeQuery(sql);
     
                     while (rs.next()){
-                        urlsEncontrados.add(rs.getString("link_url"));
+                        busca.add(rs.getString("link_url"));
                     }
                     
                     sql = "UPDATE palavras SET numpesquisas = numpesquisas + 1 WHERE palavra = '" + word + "'";
                     stmt.executeUpdate(sql);
                 }
                 
-                Map<String, Long> couterMap = urlsEncontrados.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
+                // Map<String, Long> couterMap = urlsEncontrados.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
 
-                for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
-                    if (entry.getValue() == palavras.size()){
-                        String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
-                        ResultSet rs = stmt.executeQuery(sql);
-                        retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
-                        busca.add(retornar);
-                    }
-                }
+                // for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
+                //     if (entry.getValue() == palavras.size()){
+                //         String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
+                //         ResultSet rs = stmt.executeQuery(sql);
+                //         retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
+                //         busca.add(retornar);
+                //     }
+                // }
             }
-
-
-
+            
         } catch (SQLException e1){
             e1.printStackTrace();
         } catch (Exception e) {

@@ -20,4 +20,6 @@ public interface QueryIf extends Remote{
 
     public CopyOnWriteArrayList<String> execURL(String url) throws RemoteException;
 
+    public String getDataBaseFile();
+
 }
