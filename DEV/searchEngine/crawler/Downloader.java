@@ -9,6 +9,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import searchEngine.URLs.Url;
+import searchEngine.URLs.UrlQueue;
 import searchEngine.URLs.UrlQueueInterface;
 import searchEngine.utils.Log;
 
@@ -20,9 +21,12 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
+import java.net.URL;
+
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.net.URLEncoder;
 import java.rmi.registry.LocateRegistry;
 
 /**
@@ -109,22 +113,38 @@ public class Downloader {
         this.running = state;
     }
 
-    public boolean extractWords(String url) {
+    public boolean extractWords(String url, UrlQueueInterface queue) {
 
         try {
+
             // ligar ao website
-            Document doc = Jsoup.connect(url).get();
+            //Document doc = Jsoup.connect(url).charset("UTF-8").get();
+            Document doc = Jsoup.parse(new URL(url).openStream(), "ISO-8859-1", url);
 
             // instanciar um string tokenizer para encontrar palavras
             StringTokenizer tokens = new StringTokenizer(doc.text());
+            String aux;
 
             // array de tokens que vão ser separados de pontuação
-            String cleanTokens[];
+            String cleanTokens[], texto = "", wordsForText[];
+            int j = 0;
 
             while (tokens.hasMoreElements()) {
 
+                aux = tokens.nextToken();
+
                 // retirar pontuaçao dos tokens
-                cleanTokens = tokens.nextToken().toLowerCase().split("[^a-zA-Z0-9]+");
+                cleanTokens = aux.toLowerCase().split("[^a-zA-Z0-9]+");
+
+                if (j++ == 0){
+                    wordsForText = aux.split(" ;");
+                    for (int i = 0; i < 10 && i < wordsForText.length; i++) {
+                        texto += wordsForText[i];
+                        if (i < 9) {
+                            texto += " ";
+                        }
+                    }
+                }
 
                 if (cleanTokens.length == 0) {
                     continue;
@@ -137,19 +157,20 @@ public class Downloader {
 
             }
 
+            this.wordIndex.setTexto(texto);
+            this.wordIndex.setTitulo(doc.title());
+            this.wordIndex.setUrl(url);
+
             // retirar as ligaçoes da pagina
             Elements links = doc.select("a[href]");
 
             // iterar por todas as ligaçoes
             for (Element link : links) {
 
-                // Voltar a pôr os links na lista para eles também serem procurados
-                if (!this.urls.contains(link.attr("abs:href"))) {
-                    this.urls.add(link.attr("abs:href"));
-                }
+                // Adicionar os urls a classe
+                this.wordIndex.addLink(link.attr("abs:href"));
+                queue.add(link.attr("abs:href"));
 
-                // // TODO: PRINT DE DEBUG
-                // System.out.println(link.text() + "\n" + link.attr("abs:href") + "\n");
             }
 
         } catch (IllegalArgumentException e) {
@@ -387,21 +408,9 @@ public class Downloader {
                 this.log.info(toString(), "Recebido '" + url + "'. A extrair...");
 
                 // analisar o website em URL e extrair as palavras para o indice
-                if (this.extractWords(url.getHyperlink())) {
+                if (this.extractWords(url.getHyperlink(), queue)) {
                     this.log.info(toString(), "'" + url + "'. Foi analisado.");
                 }
-
-                //TODO: REATIVAR CHILD URLS
-
-                // // iterar por todos os novos URLs retirados do URL principal
-                // for (String childUrl: this.urls) {
-                // this.log.info(toString(), "A analisar '" + url + "'.");
-
-                // // analisar o website em URL e extrair as palavras para o indice
-                // if (this.extractWords(childUrl)) {
-                // this.log.info(toString(), "'" + url + "'. Foi analisado.");
-                // }
-                // }
 
                 // enviar a mensagem para os Barrels
                 System.out.println(wordIndex); // TODO: PRINT DE DEBUG
