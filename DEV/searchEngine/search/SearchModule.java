@@ -133,6 +133,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         CopyOnWriteArrayList<String> response_par = null, response_impar = null;
         boolean par = false, impar = false;
+        int index = -1;
 
         // tentar com todos os barrels
         while (this.ativos.contains(1)){
@@ -146,17 +147,19 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
                     par = true;
                     response_par = barrel.execQuery(query);
+                    index = this.barrelIndex;
                 }
                 else {
                     impar = true;
                     response_impar = barrel.execQuery(query);
+                    index = this.barrelIndex;
                 }
 
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;
 
                 // retornar a resposta para o cliente
-                if (par && impar) {
+                if (par && impar || index == this.barrelIndex) {
                     CopyOnWriteArrayList<String> response = new CopyOnWriteArrayList<>();
                     response.addAll(response_par);
                     response.addAll(response_impar);

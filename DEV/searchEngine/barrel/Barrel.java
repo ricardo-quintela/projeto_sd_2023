@@ -236,8 +236,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                         
                         CopyOnWriteArrayList<String> palavras_certas = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
 
+                        int diff;
                         for (String palavra : palavras) {
-                            int diff = palavra.charAt(0) - 'm';
+                            if (palavra.length() > 0)
+                                diff = palavra.charAt(0) - 'm';
+                            else continue;
          
                             if (this.rmiPort % 2 == 0) {
                                 if (diff <= 0) palavras_certas.add(palavra);
