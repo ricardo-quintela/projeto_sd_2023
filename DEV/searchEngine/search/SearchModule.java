@@ -7,8 +7,9 @@ import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-
+import java.util.stream.Collectors;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.io.File;
@@ -131,23 +132,89 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         
         log.info(toString(), "Recebida query de " + name);
 
+        CopyOnWriteArrayList<String> response_par = new CopyOnWriteArrayList<>(), response_impar = new CopyOnWriteArrayList<>();
+        
+        boolean par = false, impar = false;
+
+        Connection conn = null;
+        Statement stmt = null;
+        String retornar = "";
+
         // tentar com todos os barrels
+        int count = 0;
         while (this.ativos.contains(1)){
 
             if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
+            count ++;
 
             try {
-
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));                
                 
-                CopyOnWriteArrayList<String> response = barrel.execQuery(query);   
+                if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
+                    par = true;
+                    response_par = barrel.execQuery(query);
+                } else {
+                    impar = true;
+                    response_impar = barrel.execQuery(query);    
+                }
+
                 
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;
 
                 // retornar a resposta para o cliente
-                return response;
+                if ((par && impar) || (count >= this.barrel_ports.size())) {
+                    CopyOnWriteArrayList<String> response = new CopyOnWriteArrayList<>();
+                    response.addAll(response_par);
+                    response.addAll(response_impar);
+
+                    // tens os links de todas as palavras
+                    // so podes retornar os links que estao ligados a todas as palavras ao mesmo tempo
+                    // count dos links == numero de palavras enviadas (size da querry)
+                    // no barrel tirar a verificação lá
+
+                    try {
+
+                        conn = DriverManager.getConnection("jdbc:sqlite:" + barrel.getDataBaseFile());
+                        stmt = conn.createStatement();
+
+                        Map<String, Long> couterMap = response.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
+                        
+                        // limpar a resposta
+                        response.clear();
+
+                        for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
+                            if (entry.getValue() == query.size()){
+                                String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
+                                ResultSet rs = stmt.executeQuery(sql);
+                                retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
+                                response.add(retornar);
+                            }
+                        }
+
+                    
+                    } catch (SQLException e1){
+                        e1.printStackTrace();
+                    } finally {
+                        try {
+                            // Fechar a conexão com o banco de dados
+                            conn.close();
+                            stmt.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
+
+
+
+
+
+                    
+                    return response;
+                }
                 
             } catch (NotBoundException e) {
                 log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(this.barrelIndex) + "'!");

@@ -97,6 +97,10 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         this.running = state;
     }
 
+    public String getDataBaseFile() throws RemoteException{
+        return this.databaseFile.getAbsolutePath();
+    }
+
     public boolean receiveMessage() {
 
         DatagramPacket packet;
@@ -217,7 +221,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             //TODO: DEBUG MENSAGEM
             System.out.println("================\n" + new String(packet.getData(), 0, packet.getLength()) + "\n===================");
 
-            // verificar se a mensagem é uma confirmaçao de heartbeat
+            // verificar se a mensagem é uma lista de palavras
             if (receivedMessage.length > 0 && receivedMessage[0].equals("type | url_list")
                     && receivedMessage[1].equals("id | " + messageId)) {
 
@@ -225,27 +229,30 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
                 try {
 
-                    try{
-                        numUrls = Integer.parseInt(receivedMessage[1].split(" *\\| *")[1]);
-                        String url = receivedMessage[2].split(" *\\| *")[1];
-                        String titulo = receivedMessage[3].split(" *\\| *")[1];
-                        String texto = receivedMessage[4].split(" *\\| *")[1];
-    
-                        CopyOnWriteArrayList<String> palavras = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
-                        CopyOnWriteArrayList<String> referenciasLinks = new CopyOnWriteArrayList<>(receivedMessage[6].split(" *\\| *")[1].split(" *, *"));
-                        
-                        this.insertDataBase(numUrls, url, palavras, referenciasLinks, titulo, texto);
+                    numUrls = Integer.parseInt(receivedMessage[1].split(" *\\| *")[1]);
+                    String url = receivedMessage[2].split(" *\\| *")[1];
+                    String titulo = receivedMessage[3].split(" *\\| *")[1];
+                    String texto = receivedMessage[4].split(" *\\| *")[1];
+
+                    CopyOnWriteArrayList<String> palavras = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
+                    CopyOnWriteArrayList<String> referenciasLinks = new CopyOnWriteArrayList<>(receivedMessage[6].split(" *\\| *")[1].split(" *, *"));
+                    
+                    CopyOnWriteArrayList<String> palavras_certas = new CopyOnWriteArrayList<>();
+
+                    int diff;
+                    for (String palavra : palavras) {
+                        if (palavra.length() > 0)
+                            diff = palavra.charAt(0) - 'm';
+                        else continue;
+        
+                        if (this.rmiPort % 2 == 0) {
+                            if (diff <= 0) palavras_certas.add(palavra);
+                        } else {
+                            if (diff > 0) palavras_certas.add(palavra);
+                        }
                     }
-                    catch (NumberFormatException e){
-                        this.log.error(toString(), "Nao e um numero");
-                        e.printStackTrace();
-                        return false;
-                    }
-                    catch (IndexOutOfBoundsException e){
-                        this.log.error(toString(), "Nao e um numero");
-                        e.printStackTrace();
-                        return false;
-                    }
+
+                    this.insertDataBase(numUrls, url, palavras_certas, referenciasLinks, titulo, texto);
 
 
                     
@@ -468,27 +475,25 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                     ResultSet rs = stmt.executeQuery(sql);
     
                     while (rs.next()){
-                        urlsEncontrados.add(rs.getString("link_url"));
+                        busca.add(rs.getString("link_url"));
                     }
                     
                     sql = "UPDATE palavras SET numpesquisas = numpesquisas + 1 WHERE palavra = '" + word + "'";
                     stmt.executeUpdate(sql);
                 }
+                
+                // Map<String, Long> couterMap = urlsEncontrados.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
 
-                Map<String, Long> couterMap = urlsEncontrados.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
-
-                for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
-                    if (entry.getValue() == palavras.size()){
-                        String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
-                        ResultSet rs = stmt.executeQuery(sql);
-                        retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
-                        busca.add(retornar);
-                    }
-                }
+                // for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
+                //     if (entry.getValue() == palavras.size()){
+                //         String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
+                //         ResultSet rs = stmt.executeQuery(sql);
+                //         retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
+                //         busca.add(retornar);
+                //     }
+                // }
             }
-
-
-
+            
         } catch (SQLException e1){
             e1.printStackTrace();
         } catch (Exception e) {
@@ -722,6 +727,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
         } catch (RemoteException e) {
             System.out.println("Erro: Ocorreu um erro de RMI ao criar o Barrel!");
+            e.printStackTrace();
             return;
         } catch (IOException e) {
             System.out.println("Erro: Ocorreu um erro no MulticastSocket ao criar o Barrel!");
