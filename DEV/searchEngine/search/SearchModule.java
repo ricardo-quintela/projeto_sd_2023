@@ -133,7 +133,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         log.info(toString(), "Recebida query de " + name);
 
         CopyOnWriteArrayList<String> response_par = new CopyOnWriteArrayList<>(), response_impar = new CopyOnWriteArrayList<>();
-        CopyOnWriteArrayList<String> response_par_aux = new CopyOnWriteArrayList<>(), response_impar_aux = new CopyOnWriteArrayList<>();
         
         boolean par = false, impar = false;
 
@@ -152,55 +151,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 // ligar ao server registado no rmiEndpoint fornecido
                 QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));                
                 
-                try {
-                    if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
-                        par = true;
-                        response_par_aux = barrel.execQuery(query);
-                        conn = DriverManager.getConnection("jdbc:sqlite:" + barrel.getDataBaseFile());
-                        stmt = conn.createStatement();
-
-                        Map<String, Long> couterMap = response_par_aux.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
-
-                        for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
-                            if (entry.getValue() == query.size()){
-                                String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
-                                ResultSet rs = stmt.executeQuery(sql);
-                                retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
-                                response_par.add(retornar);
-                            }
-                        }
-                    }
-                    else {
-                        impar = true;
-                        response_impar_aux = barrel.execQuery(query);
-                        conn = DriverManager.getConnection("jdbc:sqlite:" + barrel.getDataBaseFile());
-                        stmt = conn.createStatement();
-
-                        Map<String, Long> couterMap = response_impar_aux.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
-
-                        for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
-                            if (entry.getValue() == query.size()){
-                                String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
-                                ResultSet rs = stmt.executeQuery(sql);
-                                retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
-                                response_impar.add(retornar);
-                            }
-                        }
-                    }
-
-                } catch (SQLException e1){
-                    e1.printStackTrace();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        // Fechar a conexão com o banco de dados
-                        conn.close();
-                        stmt.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
+                    par = true;
+                    response_par = barrel.execQuery(query);
+                } else {
+                    impar = true;
+                    response_impar = barrel.execQuery(query);    
                 }
+
                 
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;
@@ -215,6 +173,45 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                     // so podes retornar os links que estao ligados a todas as palavras ao mesmo tempo
                     // count dos links == numero de palavras enviadas (size da querry)
                     // no barrel tirar a verificação lá
+
+                    try {
+
+                        conn = DriverManager.getConnection("jdbc:sqlite:" + barrel.getDataBaseFile());
+                        stmt = conn.createStatement();
+
+                        Map<String, Long> couterMap = response.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
+                        
+                        // limpar a resposta
+                        response.clear();
+
+                        for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
+                            if (entry.getValue() == query.size()){
+                                String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
+                                ResultSet rs = stmt.executeQuery(sql);
+                                retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
+                                response.add(retornar);
+                            }
+                        }
+
+                    
+                    } catch (SQLException e1){
+                        e1.printStackTrace();
+                    } finally {
+                        try {
+                            // Fechar a conexão com o banco de dados
+                            conn.close();
+                            stmt.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
+
+
+
+
+
                     
                     return response;
                 }

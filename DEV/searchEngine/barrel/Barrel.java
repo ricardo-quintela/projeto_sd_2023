@@ -221,7 +221,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             //TODO: DEBUG MENSAGEM
             System.out.println("================\n" + new String(packet.getData(), 0, packet.getLength()) + "\n===================");
 
-            // verificar se a mensagem é uma confirmaçao de heartbeat
+            // verificar se a mensagem é uma lista de palavras
             if (receivedMessage.length > 0 && receivedMessage[0].equals("type | url_list")
                     && receivedMessage[1].equals("id | " + messageId)) {
 
@@ -229,42 +229,30 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
                 try {
 
-                    try{
-                        numUrls = Integer.parseInt(receivedMessage[1].split(" *\\| *")[1]);
-                        String url = receivedMessage[2].split(" *\\| *")[1];
-                        String titulo = receivedMessage[3].split(" *\\| *")[1];
-                        String texto = receivedMessage[4].split(" *\\| *")[1];
-    
-                        CopyOnWriteArrayList<String> palavras = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
-                        CopyOnWriteArrayList<String> referenciasLinks = new CopyOnWriteArrayList<>(receivedMessage[6].split(" *\\| *")[1].split(" *, *"));
-                        
-                        CopyOnWriteArrayList<String> palavras_certas = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
+                    numUrls = Integer.parseInt(receivedMessage[1].split(" *\\| *")[1]);
+                    String url = receivedMessage[2].split(" *\\| *")[1];
+                    String titulo = receivedMessage[3].split(" *\\| *")[1];
+                    String texto = receivedMessage[4].split(" *\\| *")[1];
 
-                        int diff;
-                        for (String palavra : palavras) {
-                            if (palavra.length() > 0)
-                                diff = palavra.charAt(0) - 'm';
-                            else continue;
-         
-                            if (this.rmiPort % 2 == 0) {
-                                if (diff <= 0) palavras_certas.add(palavra);
-                            } else {
-                                if (diff > 0) palavras_certas.add(palavra);
-                            }
+                    CopyOnWriteArrayList<String> palavras = new CopyOnWriteArrayList<>(receivedMessage[5].split(" *\\| *")[1].split(" *, *"));
+                    CopyOnWriteArrayList<String> referenciasLinks = new CopyOnWriteArrayList<>(receivedMessage[6].split(" *\\| *")[1].split(" *, *"));
+                    
+                    CopyOnWriteArrayList<String> palavras_certas = new CopyOnWriteArrayList<>();
+
+                    int diff;
+                    for (String palavra : palavras) {
+                        if (palavra.length() > 0)
+                            diff = palavra.charAt(0) - 'm';
+                        else continue;
+        
+                        if (this.rmiPort % 2 == 0) {
+                            if (diff <= 0) palavras_certas.add(palavra);
+                        } else {
+                            if (diff > 0) palavras_certas.add(palavra);
                         }
+                    }
 
-                        this.insertDataBase(numUrls, url, palavras_certas, referenciasLinks, titulo, texto);
-                    }
-                    catch (NumberFormatException e){
-                        this.log.error(toString(), "Nao e um numero");
-                        e.printStackTrace();
-                        return false;
-                    }
-                    catch (IndexOutOfBoundsException e){
-                        this.log.error(toString(), "Nao e um numero");
-                        e.printStackTrace();
-                        return false;
-                    }
+                    this.insertDataBase(numUrls, url, palavras_certas, referenciasLinks, titulo, texto);
 
 
                     
