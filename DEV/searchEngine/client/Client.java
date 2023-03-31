@@ -17,6 +17,7 @@ import searchEngine.fileWorker.TextFileWorker;
 public class Client{
     private String name;
 
+    private ArrayList<String> rmiHostSM;
     private ArrayList<String> rmiEndpointSM;
     private ArrayList<Integer> rmiPortSM;
 
@@ -29,6 +30,7 @@ public class Client{
      */
     public Client(){
         this.name = null;
+        this.rmiHostSM = new ArrayList<>();
         this.rmiEndpointSM = new ArrayList<>();
         this.rmiPortSM = new ArrayList<>();
         this.log = new Log();
@@ -41,6 +43,7 @@ public class Client{
      */
     public Client(String name){
         this.name = name;
+        this.rmiHostSM = new ArrayList<>();
         this.rmiEndpointSM = new ArrayList<>();
         this.rmiPortSM = new ArrayList<>();
         this.log = new Log();
@@ -432,8 +435,9 @@ public class Client{
 
             // adiciona os portos e os endpoints às suas respetivas listas
             for (int i = 0; i < lines.size(); i++) {
-                this.rmiPortSM.add(Integer.parseInt(lines.get(i).split("/")[0]));
-                this.rmiEndpointSM.add(lines.get(i).split("/")[1]);
+                this.rmiHostSM.add(lines.get(i).split("/")[0]);
+                this.rmiPortSM.add(Integer.parseInt(lines.get(i).split("/")[1]));
+                this.rmiEndpointSM.add(lines.get(i).split("/")[2]);
             }
 
         } catch (NumberFormatException e){
@@ -449,10 +453,8 @@ public class Client{
             return false;
         }
 
-        
         System.out.println("Configuracao carregada!");
         return true;
-        
     }
 
     /**

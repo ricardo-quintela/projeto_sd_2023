@@ -36,11 +36,13 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
      * Um {@code SearchModule} recebe pedidos RMI de um cliente e realiza
      * pedidos a {@code Barrels} com endpoints fornecidos num ficheiro de configuração
      */
+    private ArrayList<String> barrel_hosts;
     private ArrayList<Integer> barrel_ports;
     private ArrayList<String> barrel_endpoints;
     private ArrayList<Integer> ativos;
     private int rmiPort;
     private String rmiEndpoint;
+    private String rmiHostQueue;
     private int rmiPortQueue;
     private String rmiEndpointQueue;
     private int barrelIndex;
@@ -57,6 +59,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     public SearchModule() throws RemoteException{
 
         // guardar os endpoints dos barrels
+        this.barrel_hosts = new ArrayList<String>();
         this.barrel_ports = new ArrayList<Integer>();
         this.barrel_endpoints = new ArrayList<String>();
         this.ativos = new ArrayList<Integer>();
@@ -92,8 +95,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         // ler porta RMI e endpoint da fila de urls
         try {
-            this.rmiPortQueue = Integer.parseInt(lines.get(1).split("/")[0]);
-            this.rmiEndpointQueue = lines.get(1).split("/")[1];
+            this.rmiHostQueue = lines.get(1).split("/")[0];
+            this.rmiPortQueue = Integer.parseInt(lines.get(1).split("/")[1]);
+            this.rmiEndpointQueue = lines.get(1).split("/")[2];;
         } catch (NumberFormatException e){
             log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'!\n Nao foi possivel carregar a porta da Fila!");
             return false;
@@ -107,8 +111,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
             // adiciona os portos e os endpoints às suas respetivas listas
             for (int i = 2; i < lines.size(); i++) {
-                this.barrel_ports.add(Integer.parseInt(lines.get(i).split("/")[0]));
-                this.barrel_endpoints.add(lines.get(i).split("/")[1]);
+                this.barrel_hosts.add(lines.get(i).split("/")[0]);
+                this.barrel_ports.add(Integer.parseInt(lines.get(i).split("/")[1]));
+                this.barrel_endpoints.add(lines.get(i).split("/")[2]);
                 this.ativos.add(1);
             }
 
@@ -171,7 +176,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
             try {
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));          
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_hosts.get(this.barrelIndex), this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));          
                 this.ativos.set(this.barrelIndex, 1);      
                 
                 if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
@@ -279,7 +284,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         try {
             // ligar ao server da fila de urls registado no rmiEndpoint fornecido
-            UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(this.rmiPortQueue).lookup(this.rmiEndpointQueue);
+            UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(this.rmiHostQueue, this.rmiPortQueue).lookup(this.rmiEndpointQueue);
             downloaders = urlqueue.getDownloaders();
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + this.rmiEndpointQueue + "'!");
