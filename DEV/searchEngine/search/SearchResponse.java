@@ -2,6 +2,7 @@ package searchEngine.search;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public interface SearchResponse extends Remote {
@@ -61,5 +62,18 @@ public interface SearchResponse extends Remote {
 
 
     public String admin() throws RemoteException;
+
+
+    /**
+     * 
+     * Recebe a resposta obtida na pesquisa e retorna a parte da pagina 
+     * a ser imprimida.
+     * 
+     * @param response Conjunto de Urls e suas informacoes
+     * @param page Pagina a mostrar
+     * @return Parte da response a ser apresentada
+     * @throws RemoteException
+     */
+    public CopyOnWriteArrayList<String> pagination(CopyOnWriteArrayList<String> response, int page) throws RemoteException;
 
 }

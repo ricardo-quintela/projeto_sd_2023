@@ -7,6 +7,7 @@ import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -126,6 +127,26 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         
     }
 
+    public CopyOnWriteArrayList<String> pagination(CopyOnWriteArrayList<String> response, int page) throws RemoteException{
+
+        System.out.println(rmiEndpoint);
+        for (int i = page * 10 - 10; i < 10*page && i < response.size(); i++) {
+            System.out.println(response);
+        }
+        int indiceInicial = page * 10 - 10;
+        if (indiceInicial > response.size()){
+            return null;
+        }
+        int indiceFinal = 10 * page;
+        if (indiceFinal > response.size()){
+            indiceFinal = response.size();
+        }
+        
+        List<String> lista = response.subList(indiceInicial, indiceFinal);
+        CopyOnWriteArrayList<String> returnList = new CopyOnWriteArrayList<>(lista);
+
+        return returnList;
+    }
 
 
     public CopyOnWriteArrayList<String> execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException{
@@ -169,10 +190,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                     response.addAll(response_par);
                     response.addAll(response_impar);
 
-                    // tens os links de todas as palavras
-                    // so podes retornar os links que estao ligados a todas as palavras ao mesmo tempo
-                    // count dos links == numero de palavras enviadas (size da querry)
-                    // no barrel tirar a verificação lá
 
                     try {
 
@@ -188,7 +205,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                             if (entry.getValue() == query.size()){
                                 String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
                                 ResultSet rs = stmt.executeQuery(sql);
-                                retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
+                                retornar = "Url: " + rs.getString("url") + " | Titulo: " + rs.getString("titulo") + " | Texto: " + rs.getString("texto");
                                 response.add(retornar);
                             }
                         }
@@ -205,13 +222,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                             e.printStackTrace();
                         }
                     }
-
-
-
-
-
-
-
                     
                     return response;
                 }
@@ -238,7 +248,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         }
 
         return null;
-
     }
 
     public String admin() throws RemoteException{

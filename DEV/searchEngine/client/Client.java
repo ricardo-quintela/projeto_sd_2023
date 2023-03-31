@@ -6,6 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -132,6 +133,7 @@ public class Client{
                 System.out.print("Googol - Pesquisa\nDigite palavras-chave para pesquisar e '/back' para voltar atras.\nDigite: ");
                 
                 // ler uma linha do stdin
+                sc.nextLine();
                 this.lastSearch = sc.nextLine();
 
             }
@@ -158,16 +160,41 @@ public class Client{
                 }
 
             } catch (RemoteException e) {
-                //System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
                 return false;
             }
 
-            // imprimir a resposta recebida
-            for (String str: response) {
-                System.out.println(str);
+            // Pede a pagina e fica a printar a pagina ate querer sair
+            int page = 1;
+            CopyOnWriteArrayList<String> pagina;
+
+            while (page != 0){
+                try{
+                    pagina = searchModuleIF.pagination(response, page);
+                    if (pagina != null){
+                        
+                        // imprimir a resposta recebida
+                        for (String str: pagina) {
+                            System.out.println(str);
+                        }
+                        
+                    } else {
+                        System.out.println("Pagina vazia.");
+                    }
+
+                    System.out.print("Digite a pagina a que deseja aceder e 0 caso queira sair: ");
+                    page = sc.nextInt();
+
+                } catch (RemoteException e){
+                    e.printStackTrace();
+                    return false;
+                } catch (NumberFormatException e){
+                    System.out.print("Deve inserir um numero.");
+                }
             }
+
             this.lastSearch = null;
         }
+
         return true;
     }
 
