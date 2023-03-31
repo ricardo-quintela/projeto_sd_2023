@@ -133,7 +133,6 @@ public class Client{
                 System.out.print("Googol - Pesquisa\nDigite palavras-chave para pesquisar e '/back' para voltar atras.\nDigite: ");
                 
                 // ler uma linha do stdin
-                sc.nextLine();
                 this.lastSearch = sc.nextLine();
 
             }
@@ -155,6 +154,11 @@ public class Client{
                 // caso o pedido não possa ser executado
                 if (response == null){
                     System.out.println("Erro: Nao houve resposta para o pedido!");
+                    this.lastSearch = null;
+                    continue;
+                }
+                else if (response.size() == 0){
+                    System.out.println("Sem resultados.");
                     this.lastSearch = null;
                     continue;
                 }

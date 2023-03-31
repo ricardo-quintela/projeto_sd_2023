@@ -467,8 +467,6 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
             else if (palavras != null){
 
-                ArrayList<String> urlsEncontrados = new ArrayList<>();
-
                 for (String word : palavras) {
                     // Insere na base de dados
                     String sql = "SELECT * FROM palavras_link WHERE palavras_palavra = '" + word + "'";
@@ -481,17 +479,6 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                     sql = "UPDATE palavras SET numpesquisas = numpesquisas + 1 WHERE palavra = '" + word + "'";
                     stmt.executeUpdate(sql);
                 }
-                
-                // Map<String, Long> couterMap = urlsEncontrados.stream().collect(Collectors.groupingBy(e -> e.toString(),Collectors.counting()));
-
-                // for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
-                //     if (entry.getValue() == palavras.size()){
-                //         String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
-                //         ResultSet rs = stmt.executeQuery(sql);
-                //         retornar = rs.getString("url") + "|" + rs.getString("titulo") + "|" + rs.getString("texto");
-                //         busca.add(retornar);
-                //     }
-                // }
             }
             
         } catch (SQLException e1){

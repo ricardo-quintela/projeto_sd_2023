@@ -2,6 +2,7 @@ package searchEngine.URLs;
 
 // import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import searchEngine.utils.Log;
@@ -20,6 +21,7 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     private Log log;
     private int urlCounter;
 
+    public CopyOnWriteArrayList<String> downloaders;
     private int numDownloaders;
 
     /**
@@ -29,6 +31,7 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     public UrlQueue() throws RemoteException{
         this.urls = new LinkedBlockingQueue<Url>();
         this.urlCounter = 0;
+        this.downloaders = new CopyOnWriteArrayList<>();
     }
 
     /**
@@ -44,8 +47,13 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
         this.log = new Log();
         this.urlCounter = 0;
         this.numDownloaders = 0;
+        this.downloaders = new CopyOnWriteArrayList<>();
     }
     
+
+    public CopyOnWriteArrayList<String> getDownloaders() throws RemoteException {
+        return this.downloaders;
+    }
 
     public int getNumDownloaders() throws RemoteException {
         return this.numDownloaders;
@@ -64,11 +72,16 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     }
 
 
-    public Url remove(String downloader) throws RemoteException {
+    public Url removeURL(String downloader, String endpoint, int porta) throws RemoteException {
         try {
+            System.out.println("a");
+            String str = "IP: /" + endpoint + ":" + porta;
+            System.out.println(str);
+            this.downloaders.add(str);
             this.numDownloaders ++;
             Url url = urls.take();
             this.numDownloaders --;
+            this.downloaders.remove(str);
             this.log.error(toString(), "Url removida da fila por " + downloader + ": " + url);
             return url;
             

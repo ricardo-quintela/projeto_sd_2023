@@ -7,6 +7,8 @@ import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -163,14 +165,15 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         // tentar com todos os barrels
         int count = 0;
-        while (this.ativos.contains(1)){
+        while (true){
 
             if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
             count ++;
 
             try {
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));                
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));          
+                this.ativos.set(this.barrelIndex, 1);      
                 
                 if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
                     par = true;
@@ -200,15 +203,36 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                         
                         // limpar a resposta
                         response.clear();
-
+                        List<String> resultList = new ArrayList<>();
+                        
                         for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
-                            if (entry.getValue() == query.size()){
-                                String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
+                            if (entry.getValue() == query.size()){                                
+                                String sql =    "SELECT count(*) as 'contagem', url, titulo, texto" +
+                                                " FROM link" +
+                                                " LEFT JOIN link_referencias ON link.url = link_referencias.link_url" +
+                                                " WHERE link.url = '" + entry.getKey() + "'" +
+                                                " ORDER BY contagem";
                                 ResultSet rs = stmt.executeQuery(sql);
-                                retornar = "Url: " + rs.getString("url") + " | Titulo: " + rs.getString("titulo") + " | Texto: " + rs.getString("texto");
-                                response.add(retornar);
+                                System.out.println(rs.toString());
+                                while (rs.next()) {
+                                    retornar = "Url: " + rs.getString("url") + " | Titulo: " + rs.getString("titulo") + " | Texto: " + rs.getString("texto")  + " | Contagem: "  + rs.getInt("contagem");
+                                    resultList.add(retornar);
+                                }
                             }
                         }
+
+                        // Ordenar a lista manualmente em ordem crescente
+                        Collections.sort(resultList, new Comparator<String>() {
+                            @Override
+                            public int compare(String o1, String o2) {
+                                int contagem1 = Integer.parseInt(o1.substring(o1.lastIndexOf("Contagem: ") + 10).trim());
+                                int contagem2 = Integer.parseInt(o2.substring(o2.lastIndexOf("Contagem: ") + 10).trim());
+                                return Integer.compare(contagem2, contagem1);
+                            }
+                        });
+
+                        // Adicionar os resultados à lista final na ordem correta
+                        response.addAll(resultList);
 
                     
                     } catch (SQLException e1){
@@ -220,6 +244,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                             stmt.close();
                         } catch (Exception e) {
                             e.printStackTrace();
+                            break;
                         }
                     }
                     
@@ -252,12 +277,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     public String admin() throws RemoteException{
 
-        int valorDownloaders = 0, valorBarrels = 0;
+        CopyOnWriteArrayList<String> downloaders = new CopyOnWriteArrayList<>();
 
         try {
             // ligar ao server da fila de urls registado no rmiEndpoint fornecido
             UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(this.rmiPortQueue).lookup(this.rmiEndpointQueue);
-            valorBarrels = urlqueue.getNumDownloaders();
+            downloaders = urlqueue.getDownloaders();
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + this.rmiEndpointQueue + "'!");
         } catch (AccessException e) {
@@ -266,10 +291,162 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             System.out.println("Erro: Não foi possível encontrar o registo");
         }
 
-        for (int i : this.ativos) {
-            if(i == 1) valorBarrels ++;
+        String barrelsAtivos = "";
+        String downloadersAtivos = "";
+        System.out.println("a");
+        for (int i = 0; i < this.barrel_ports.size(); i++) {
+            if(this.ativos.get(i) == 1) {
+                barrelsAtivos += "IP: /" + this.barrel_endpoints.get(i) + ":" + this.barrel_ports.get(i) + "\n";
+            }
         }
-        return valorBarrels + " Barrels disponiveis e " + valorDownloaders + " Downloaders disponiveis";
+        System.out.println("b");
+        for (String string : downloaders) {
+            downloadersAtivos += string + "\n";
+        }
+
+        // tentar com todos os barrels
+        Boolean par = false, impar = false;
+        Connection conn = null;
+        Statement stmt = null;
+        ArrayList<String> retornar = new ArrayList<>();
+        int count = 0;
+        String pesquisas = "PESQUISAS:\n";
+        while (true){
+            count ++;
+            if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
+
+            try {
+
+                // ligar ao server registado no rmiEndpoint fornecido
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
+                
+                if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
+                    par = true;
+                    try {
+
+                        conn = DriverManager.getConnection("jdbc:sqlite:" + barrel.getDataBaseFile());
+                        stmt = conn.createStatement();
+                    
+                        String sql =    "SELECT url, numPesquisas" +
+                                        " FROM link";
+    
+                        String sql2 =    "SELECT palavra, numPesquisas" +
+                                         " FROM palavras";
+    
+                        ResultSet rs = stmt.executeQuery(sql);
+                        String str;  
+                        while (rs.next()) {
+                            str = rs.getString("url") + " |" + rs.getString("numPesquisas");
+                            retornar.add(str);
+                        }
+    
+                        rs = stmt.executeQuery(sql2);
+                        while (rs.next()) {
+                            str = rs.getString("palavra") + " |" + rs.getString("numPesquisas");
+                            retornar.add(str);
+                        }
+                    
+                    } catch (SQLException e1){
+                        e1.printStackTrace();
+                    } finally {
+                        try {
+                            // Fechar a conexão com o banco de dados
+                            conn.close();
+                            stmt.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            break;
+                        }
+                    }
+                } else {
+                    impar = true;
+                    try {
+
+                        conn = DriverManager.getConnection("jdbc:sqlite:" + barrel.getDataBaseFile());
+                        stmt = conn.createStatement();
+                    
+                        String sql =    "SELECT url, numPesquisas" +
+                                        " FROM link";
+    
+                        String sql2 =    "SELECT palavra, numPesquisas" +
+                                         " FROM palavras";
+    
+                        ResultSet rs = stmt.executeQuery(sql);
+                        String str;  
+                        while (rs.next()) {
+                            str = rs.getString("url") + " |" + rs.getString("numPesquisas");
+                            retornar.add(str);
+                        }
+    
+                        rs = stmt.executeQuery(sql2);
+                        while (rs.next()) {
+                            str = rs.getString("palavra") + " |" + rs.getString("numPesquisas");
+                            retornar.add(str);
+                        }
+                    
+                    } catch (SQLException e1){
+                        e1.printStackTrace();
+                    } finally {
+                        try {
+                            // Fechar a conexão com o banco de dados
+                            conn.close();
+                            stmt.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            break;
+                        }
+                    }
+                }
+
+                
+                if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
+                this.barrelIndex ++;
+
+                // retornar a resposta para o cliente
+                if ((par && impar) || (count >= this.barrel_ports.size())) {
+
+                    Collections.sort(retornar, new Comparator<String>() {
+                        @Override
+                        public int compare(String o1, String o2) {
+                            int contagem1 = Integer.parseInt(o1.substring(o1.lastIndexOf("|") + 1).trim());
+                            int contagem2 = Integer.parseInt(o2.substring(o2.lastIndexOf("|") + 1).trim());
+                            return Integer.compare(contagem2, contagem1);
+                        }
+                    });
+
+                    for (int i = 0; i < 10 && retornar.size() > i; i++) {
+                        if(Integer.parseInt(retornar.get(i).substring(retornar.get(i).lastIndexOf("|") + 1).trim()) == 0){
+                            break;
+                        }
+                        pesquisas += retornar.get(i) + "\n";
+                    }
+                    break;
+                }
+
+                
+                
+            } catch (NotBoundException e) {
+                log.error(toString(), "Nao existe um servidor registado no endpoint '" + this.barrel_endpoints.get(this.barrelIndex) + "'!");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
+                continue;
+    
+            } catch (AccessException e) {
+                log.error(toString(), "Esta máquina nao tem permissões para ligar ao endpoint '" + this.barrel_endpoints.get(this.barrelIndex) + "'!");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
+                continue;
+
+            } catch (RemoteException e) {
+                log.error(toString(), this.barrel_ports.get(this.barrelIndex) + "/" + this.barrel_endpoints.get(this.barrelIndex) + " nao esta disponivel.");
+                this.ativos.set(this.barrelIndex, 0);
+                this.barrelIndex += 1;
+                continue;
+            }
+
+        }
+
+        return "BARRELS:\n" + barrelsAtivos + "DOWNLOADERS:\n" + downloadersAtivos + pesquisas;
     }
 
     public CopyOnWriteArrayList<String> searchUrl(String name, String query){
@@ -277,7 +454,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         log.info(toString(), "Recebida query de " + name);
 
         // tentar com todos os barrels
-        while (this.ativos.contains(1)){
+        while (true){
 
             if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
 
@@ -287,6 +464,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
                 
                 CopyOnWriteArrayList<String> response = barrel.execURL(query);   
+
+                this.ativos.set(this.barrelIndex, 1);
 
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;
@@ -314,8 +493,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             }
 
         }
-
-        return null;
     }
 
     public boolean execURL(String url) throws RemoteException{
@@ -560,6 +737,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         return false;
     }
      
+
     public boolean login(String name, String password) throws RemoteException{
         if (checkDataBase(name, password)){
             return true;
@@ -615,7 +793,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         // tenta conectar na base de dados
         if (!searchModule.dataBaseInitialize()){
-            searchModule.unexport();
+            searchModule.unexport();    
             return;
         }
     }
