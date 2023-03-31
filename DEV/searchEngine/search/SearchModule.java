@@ -7,6 +7,8 @@ import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -200,15 +202,36 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                         
                         // limpar a resposta
                         response.clear();
-
+                        List<String> resultList = new ArrayList<>();
+                        
                         for (Map.Entry<String, Long> entry : couterMap.entrySet()) {
-                            if (entry.getValue() == query.size()){
-                                String sql = "SELECT * FROM link WHERE url = '" + entry.getKey() + "'";
+                            if (entry.getValue() == query.size()){                                
+                                String sql =    "SELECT count(*) as 'contagem', url, titulo, texto" +
+                                                " FROM link" +
+                                                " LEFT JOIN link_referencias ON link.url = link_referencias.link_url" +
+                                                " WHERE link.url = '" + entry.getKey() + "'" +
+                                                " ORDER BY contagem";
                                 ResultSet rs = stmt.executeQuery(sql);
-                                retornar = "Url: " + rs.getString("url") + " | Titulo: " + rs.getString("titulo") + " | Texto: " + rs.getString("texto");
-                                response.add(retornar);
+                                System.out.println(rs.toString());
+                                while (rs.next()) {
+                                    retornar = "Url: " + rs.getString("url") + " | Titulo: " + rs.getString("titulo") + " | Texto: " + rs.getString("texto")  + " | Contagem: "  + rs.getInt("contagem");
+                                    resultList.add(retornar);
+                                }
                             }
                         }
+
+                        // Ordenar a lista manualmente em ordem crescente
+                        Collections.sort(resultList, new Comparator<String>() {
+                            @Override
+                            public int compare(String o1, String o2) {
+                                int contagem1 = Integer.parseInt(o1.substring(o1.lastIndexOf("Contagem: ") + 10).trim());
+                                int contagem2 = Integer.parseInt(o2.substring(o2.lastIndexOf("Contagem: ") + 10).trim());
+                                return Integer.compare(contagem2, contagem1);
+                            }
+                        });
+
+                        // Adicionar os resultados à lista final na ordem correta
+                        response.addAll(resultList);
 
                     
                     } catch (SQLException e1){

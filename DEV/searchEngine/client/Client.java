@@ -158,6 +158,11 @@ public class Client{
                     this.lastSearch = null;
                     continue;
                 }
+                else if (response.size() == 0){
+                    System.out.println("Sem resultados.");
+                    this.lastSearch = null;
+                    continue;
+                }
 
             } catch (RemoteException e) {
                 return false;
