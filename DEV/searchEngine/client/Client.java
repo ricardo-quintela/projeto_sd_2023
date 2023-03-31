@@ -6,7 +6,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -81,7 +80,6 @@ public class Client{
                 }
 
             } catch (RemoteException e) {
-                //System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
                 return false;
             }
 
@@ -110,7 +108,6 @@ public class Client{
             }
 
         } catch (RemoteException e) {
-            //System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
             return false;
         }
 
@@ -218,7 +215,6 @@ public class Client{
                 
                 // ler uma linha do stdin
                 this.lastSearch = sc.nextLine();
-
             }
             
             // voltar atrás no menu
@@ -240,7 +236,6 @@ public class Client{
                 }
 
             } catch (RemoteException e) {
-                //System.out.println("Erro: Ocorreu um erro do servidor ao enviar o URL!");
                 return false;
             }
 
@@ -442,20 +437,20 @@ public class Client{
             }
 
         } catch (NumberFormatException e){
-            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Porta invalida!");
+            System.out.println("Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Porta invalida!");
             return false;
         } catch (IndexOutOfBoundsException e){
-            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Um URL foi mal especificado!");
+            System.out.println("Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Um URL foi mal especificado!");
             return false;
         }
 
         if (this.rmiPortSM.size() == 0){
-            log.error(toString(), "Configuracao deve especificar a porta do registo RMI do SearchModule, o endpoint do SearchModule no sesu próprio registo, a porta do registo RMI dos Barrels e os endpoints de cada Barrel um por linha");
+            System.out.println("Configuracao deve especificar a porta do registo RMI do SearchModule, o endpoint do SearchModule no seu próprio registo, a porta do registo RMI dos Barrels e os endpoints de cada Barrel um por linha");
             return false;
         }
 
         
-        log.info(toString(), "Configuracao carregada!");
+        System.out.println("Configuracao carregada!");
         return true;
         
     }
@@ -469,13 +464,7 @@ public class Client{
     
 
     public static void main(String[] args) {
-        
-        // tratamento de erros nos parametros
-        if (args.length == 0){
-            printUsage();
-            return;
-        }
-        
+        // tratamento de erros nos parametros        
         if (args.length != 1){
             printUsage();
             return;
@@ -505,13 +494,10 @@ public class Client{
                 }
 
             } catch (NotBoundException e) {
-                //System.out.println("Erro: não existe um servidor registado no endpoint '" + client.rmiEndpointSM.get(index) + "'!");
                 index ++;
             } catch (AccessException e) {
-                //System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + client.rmiEndpointSM.get(index) + "'!");
                 index ++;
             } catch (RemoteException e) {
-                //System.out.println("Erro: Não foi possível encontrar o registo");
                 index ++;
             }
     

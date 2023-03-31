@@ -6,6 +6,9 @@ import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
+
 import java.io.File;
 
 import searchEngine.barrel.QueryIf;
@@ -126,11 +128,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         
         log.info(toString(), "Configuracao carregada!");
         return true;
-        
     }
 
     public CopyOnWriteArrayList<String> pagination(CopyOnWriteArrayList<String> response, int page) throws RemoteException{
-
         System.out.println(rmiEndpoint);
         for (int i = page * 10 - 10; i < 10*page && i < response.size(); i++) {
             System.out.println(response);
@@ -152,7 +152,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
 
     public CopyOnWriteArrayList<String> execSearch(String name, CopyOnWriteArrayList<String> query) throws RemoteException{
-        
         log.info(toString(), "Recebida query de " + name);
 
         CopyOnWriteArrayList<String> response_par = new CopyOnWriteArrayList<>(), response_impar = new CopyOnWriteArrayList<>();
@@ -234,7 +233,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                         // Adicionar os resultados à lista final na ordem correta
                         response.addAll(resultList);
 
-                    
                     } catch (SQLException e1){
                         e1.printStackTrace();
                     } finally {
@@ -293,13 +291,11 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         String barrelsAtivos = "";
         String downloadersAtivos = "";
-        System.out.println("a");
         for (int i = 0; i < this.barrel_ports.size(); i++) {
             if(this.ativos.get(i) == 1) {
                 barrelsAtivos += "IP: /" + this.barrel_endpoints.get(i) + ":" + this.barrel_ports.get(i) + "\n";
             }
         }
-        System.out.println("b");
         for (String string : downloaders) {
             downloadersAtivos += string + "\n";
         }
@@ -450,7 +446,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     }
 
     public CopyOnWriteArrayList<String> searchUrl(String name, String query){
-
         log.info(toString(), "Recebida query de " + name);
 
         // tentar com todos os barrels
@@ -491,7 +486,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 this.barrelIndex += 1;
                 continue;
             }
-
         }
     }
 
@@ -536,7 +530,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             return false;
         }
 
-        // tentar registar o Barrel no endpoint atribuido
+        // tentar registar o SearchModule no endpoint atribuido
         try {
             registry.bind(endpoint, this);
             log.info(toString(), "SearchModule registado em 'localhost:" + port + "/" + endpoint + "'");
@@ -545,7 +539,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             log.error(toString(), "'localhost:" + port + "/" + endpoint + "' ja foi atribuido!");
 
         } catch (RemoteException e) {
-            log.error(toString(), "Ocorreu um erro a registar o Barrel em 'localhost:" + port + "/" + endpoint + "'");
+            log.error(toString(), "Ocorreu um erro a registar o SearchModule em 'localhost:" + port + "/" + endpoint + "'");
             return false;
         }
 
@@ -562,7 +556,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         try {
             return UnicastRemoteObject.unexportObject(this, true);
         } catch (NoSuchObjectException e){
-            System.out.println("Erro: Ocorreu um erro ao remover o objeto do RMI runtime!");
+            log.error(toString(), "Ocorreu um erro ao remover o objeto do RMI runtime!");
         }
         return false;
 
@@ -684,7 +678,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             
             if (dataBaseFile.exists()){
                 conn = DriverManager.getConnection("jdbc:sqlite:" + this.fileDataBase.getAbsolutePath());
-                System.out.println("Conexão estabelecida com sucesso!");
+                log.info(toString(), "Conexão estabelecida com sucesso!");
                 stmt = conn.createStatement();
             }
             else {
@@ -692,7 +686,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 folder.mkdir();
                 dataBaseFile.createNewFile();
                 conn = DriverManager.getConnection("jdbc:sqlite:" + this.fileDataBase.getAbsolutePath());
-                System.out.println("Conexão estabelecida com sucesso!");
+                log.info(toString(), "Conexão estabelecida com sucesso!");
 
                 // Criar a tabela
                 stmt = conn.createStatement();
@@ -755,11 +749,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     public static void main(String[] args) {
 
         // tratamento de erros nos parametros
-        if (args.length == 0){
-            printUsage();
-            return;
-        }
-        
         if (args.length != 1){
             printUsage();
             return;

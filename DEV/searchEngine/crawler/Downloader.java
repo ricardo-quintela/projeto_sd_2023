@@ -7,26 +7,24 @@ import org.jsoup.select.Elements;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.StringTokenizer;
 
 import searchEngine.URLs.Url;
-import searchEngine.URLs.UrlQueue;
 import searchEngine.URLs.UrlQueueInterface;
 import searchEngine.utils.Log;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.StringTokenizer;
-
 import java.net.URL;
+
+import java.io.IOException;
 
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.net.URLEncoder;
 import java.rmi.registry.LocateRegistry;
 
 /**
@@ -42,7 +40,6 @@ public class Downloader {
     private boolean running;
 
     private MulticastSocket multicastSocket;
-    private int sockTimeout;
     private String multicastAddress;
     private int multicastPort;
 
@@ -84,7 +81,6 @@ public class Downloader {
         this.log = new Log();
 
         this.multicastSocket = new MulticastSocket(multicastPort);
-        this.sockTimeout = sockTimeout;
         this.multicastSocket.setSoTimeout(sockTimeout);
 
         this.multicastAddress = multicastAddress;
@@ -118,7 +114,6 @@ public class Downloader {
         try {
 
             // ligar ao website
-            //Document doc = Jsoup.connect(url).charset("UTF-8").get();
             Document doc = Jsoup.parse(new URL(url).openStream(), "ISO-8859-1", url);
 
             // instanciar um string tokenizer para encontrar palavras
@@ -126,7 +121,7 @@ public class Downloader {
             String aux;
 
             // array de tokens que vão ser separados de pontuação
-            String cleanTokens[], texto = "", wordsForText[];
+            String cleanTokens[], texto = "";
 
             while (tokens.hasMoreElements()) {
 
@@ -330,12 +325,9 @@ public class Downloader {
 
                 // separar a mensagem por ";"
                 receivedMessage = (new String(rcvPacket.getData(), 0, rcvPacket.getLength())).split("; *");
-                // //TODO: DEBUG CONFIRMACAO
-                // System.out.println("================\n" + (new String(rcvPacket.getData(), 0, rcvPacket.getLength())).split(" *; *")[0] + "\n===================");
-
+               
                 // verificar se a mensagem é uma confirmaçao de envio
-                if (receivedMessage.length > 0 && receivedMessage[0].equals("type | rcvd")
-                        && receivedMessage[1].equals("id | " + urlId)) {
+                if (receivedMessage.length > 0 && receivedMessage[0].equals("type | rcvd") && receivedMessage[1].equals("id | " + urlId)) {
 
                     // decrementar caso seja confirmaçao
                     multicastSubscriberCount--;
@@ -424,8 +416,6 @@ public class Downloader {
                 }
 
                 // enviar a mensagem para os Barrels
-                System.out.println(wordIndex); // TODO: PRINT DE DEBUG
-
                 this.log.info(toString(), "Comecando envio de indice!");
 
                 // tentar enviar ate conseguir para nao perder o indice gerado
@@ -500,6 +490,7 @@ public class Downloader {
             public void run() {
 
                 synchronized (this) {
+                    System.out.println("RECEBIDO SIGINT!");
                     downloader.closeSocket();
                     downloader.setRunning(false);
                 }
@@ -510,7 +501,5 @@ public class Downloader {
         if (!downloader.handleUrls()) {
             downloader.closeSocket();
         }
-
     }
-
 }

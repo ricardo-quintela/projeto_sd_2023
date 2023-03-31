@@ -7,17 +7,12 @@ import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.net.NetworkInterface;
-import java.net.InetSocketAddress;
 import java.io.File;
 
 import searchEngine.utils.Log;
@@ -34,7 +29,6 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
     private MulticastSocket multicastSocket;
     private String multicastAddress;
     private int multicastPort;
-    private int sockTimeout;
 
     private Thread multicastThread;
     private InetAddress multicastGroup;
@@ -66,7 +60,6 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         this.log = new Log();
 
         this.multicastSocket = new MulticastSocket(multicastPort);
-        this.sockTimeout = sockTimeout;
         this.multicastSocket.setSoTimeout(sockTimeout);
 
         this.multicastAddress = multicastAddress;
@@ -138,9 +131,6 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             // separar a mensagem por ";"
             receivedMessage = (new String(packet.getData(), 0, packet.getLength())).split(" *; *");
 
-            // //TODO: DEBUG HEARTBEAT
-            // System.out.println("================\n" + (new String(packet.getData(), 0, packet.getLength())).split(" *; *")[0] + "\n===================");
-            
             // verificar se a mensagem é uma confirmaçao de heartbeat
             if (receivedMessage.length > 0 && receivedMessage[0].equals("type | heartbeat")) {
                 try {
@@ -217,9 +207,6 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
             // separar a mensagem por ";"
             receivedMessage = (new String(packet.getData(), 0, packet.getLength())).split(" *; *");
-
-            //TODO: DEBUG MENSAGEM
-            System.out.println("================\n" + new String(packet.getData(), 0, packet.getLength()) + "\n===================");
 
             // verificar se a mensagem é uma lista de palavras
             if (receivedMessage.length > 0 && receivedMessage[0].equals("type | url_list")
@@ -299,19 +286,10 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             }
         }
 
-
-        // TODO: PRINTS DE DEBUG PARA SABER SE RECEBEU A MENSAGEM
-        // for (int i = 3; i < 3 + numUrls; i++) {
-        //     System.out.println("Mensagem recebida: " + receivedMessage[i]);
-        // }
-
-
         return true;
-
     }
 
     public void run() {
-
         // criar um grupo multicast
         try {
             this.multicastGroup = InetAddress.getByName(this.multicastAddress);
@@ -347,20 +325,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
     @Override
     public CopyOnWriteArrayList<String> execQuery(CopyOnWriteArrayList<String> query) throws RemoteException {
-        // String string = "";
-
-        // for (String word : query) {
-        //     string += word + " ";
-        // }
-
-        // log.info(toString(), "Query recebida: '" + query + "'");
-
         return this.searchdataBase(null, query);
     }
 
 
     public boolean dataBaseInitialize(){
-
         Connection conn = null;
         Statement stmt = null;
 
@@ -371,7 +340,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             
             if (this.databaseFile.exists()){
                 conn = DriverManager.getConnection("jdbc:sqlite:" + this.databaseFile.getAbsolutePath());
-                System.out.println("Conexão estabelecida com sucesso!");
+                // System.out.println("Conexão estabelecida com sucesso!");
+                this.log.info(toString(), "Conexão estabelecida com sucesso!");
                 stmt = conn.createStatement();
             }
             else {
@@ -379,7 +349,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 folder.mkdir();
                 databaseFile.createNewFile();
                 conn = DriverManager.getConnection("jdbc:sqlite:" + this.databaseFile.getAbsolutePath());
-                System.out.println("Conexão estabelecida com sucesso!");
+                // System.out.println("Conexão estabelecida com sucesso!");
+                this.log.info(toString(), "Conexão estabelecida com sucesso!");
 
                 // Criar a tabela
                 stmt = conn.createStatement();
@@ -416,7 +387,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                                 ");";
 
                 stmt.executeUpdate(sql);
-                System.out.println("Criada as tabelas com sucesso.");
+                // System.out.println("Criada as tabelas com sucesso.");
+                this.log.info(toString(), "Tabelas criadas com sucesso.");
             }
 
             conn.close();
@@ -440,10 +412,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
 
 
     public CopyOnWriteArrayList<String> searchdataBase(String url, CopyOnWriteArrayList<String> palavras){
-
         Connection conn = null;
         Statement stmt = null;
-        String retornar = "";
 
         CopyOnWriteArrayList<String> busca = new CopyOnWriteArrayList<>();
 
@@ -496,11 +466,9 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         }
 
         return busca;
-
     }
 
     public boolean insertDataBase(int msgId, String url, CopyOnWriteArrayList<String> palavras, CopyOnWriteArrayList<String> referencias, String titulo, String texto){
-
         Connection conn = null;
         Statement stmt = null;
         boolean check = true;
@@ -520,9 +488,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             else {
                 String sqlINSERT = "INSERT INTO link(url, titulo, texto, msgid, numpesquisas) VALUES('" + url + "', '" + titulo + "', '" + texto + "'," + msgId + ", 0)";
                 stmt.executeUpdate(sqlINSERT);
-                System.out.println("Inserção nos links");
+                // System.out.println("Inserção nos links");
+                this.log.info(toString(), "Inserção nos links!");
             }
 
+            this.log.info(toString(), "Inserção nas palavras!");
             for (String word : palavras) {
 
                 // Insere na base de dados
@@ -535,7 +505,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 else {
                     String sqlINSERT = "INSERT INTO palavras(palavra, numpesquisas) VALUES('" + word + "', 0)";
                     stmt.executeUpdate(sqlINSERT);
-                    System.out.println("Inserção nas palavras");
+                    // System.out.println("Inserção nas palavras");
                 }
 
                 // Insere na base de dados
@@ -548,10 +518,11 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 else {
                     String sqlINSERT = "INSERT INTO palavras_link(palavras_palavra, link_url) VALUES('" + word + "','" + url + "')";
                     stmt.executeUpdate(sqlINSERT);
-                    System.out.println("Inserção nas palavras + links");
+                    // System.out.println("Inserção nas palavras + links");
                 }
             }
 
+            this.log.info(toString(), "Inserção da referencia!");
             for (String ref: referencias){
 
                 // Insere na base de dados
@@ -564,7 +535,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 else {
                     String sqlINSERT = "INSERT INTO referencias(url_referencia) VALUES('" + ref + "')";
                     stmt.executeUpdate(sqlINSERT);
-                    System.out.println("Inserção da referencia");
+                    // System.out.println("Inserção da referencia");
                 }
 
                 // Insere na base de dados
@@ -577,7 +548,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
                 else {
                     String sqlINSERT = "INSERT INTO link_referencias(link_url, referencias_url_referencia) VALUES('" + url + "','" + ref + "')";
                     stmt.executeUpdate(sqlINSERT);
-                    System.out.println("Inserção da referencia links");
+                    // System.out.println("Inserção da referencia links");
                 }
             }
 
@@ -653,7 +624,8 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         try {
             return UnicastRemoteObject.unexportObject(this, true);
         } catch (NoSuchObjectException e) {
-            System.out.println("Erro: Ocorreu um erro ao remover o objeto do RMI runtime!");
+            // System.out.println("Erro: Ocorreu um erro ao remover o objeto do RMI runtime!");
+            this.log.error(toString(), "Ocorreu um erro ao remover o objeto do RMI runtime!");
         }
         return false;
 
@@ -680,12 +652,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
     }
 
     public static void main(String[] args) {
-
         // tratamento de erros nos parâmetros
-        if (args.length == 0) {
-            printUsage();
-            return;
-        }
         if (args.length != 4) {
             printUsage();
             return;
@@ -727,7 +694,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             public void run() {
 
                 synchronized (this) {
-                    System.out.println("RECEBIDO SIGINT");
+                    System.out.println("RECEBIDO SIGINT!");
                     barrel.closeSocket();
                     barrel.setRunning(false);
                 }
@@ -746,22 +713,5 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
             barrel.closeSocket();
             return;
         }
-
-        // ArrayList<String> palavras = new ArrayList<>();
-        // ArrayList<String> links = new ArrayList<>();
-        // links.add("link1");
-        // links.add("link2");
-        // links.add("link3");
-
-        // palavras.add("ola");
-        // palavras.add("adeus");
-        // barrel.insertDataBase(1,"url", palavras, links);
-
-        // palavras.clear();
-        // palavras.add("adeus");
-        // barrel.insertDataBase(1,"url2", palavras, links);
-
-        System.out.println("PASSOU");
-
     }
 }

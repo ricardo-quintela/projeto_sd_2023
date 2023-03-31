@@ -2,7 +2,6 @@ package searchEngine.search;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public interface SearchResponse extends Remote {
@@ -75,5 +74,4 @@ public interface SearchResponse extends Remote {
      * @throws RemoteException
      */
     public CopyOnWriteArrayList<String> pagination(CopyOnWriteArrayList<String> response, int page) throws RemoteException;
-
 }

@@ -48,7 +48,4 @@ public class Url implements Serializable{
     public void setId(int id) {
         this.id = id;
     }
-
-    
-
 }
