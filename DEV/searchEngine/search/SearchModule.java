@@ -165,14 +165,15 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         // tentar com todos os barrels
         int count = 0;
-        while (this.ativos.contains(1)){
+        while (true){
 
             if (this.barrelIndex == this.barrel_ports.size()) this.barrelIndex = 0;
             count ++;
 
             try {
                 // ligar ao server registado no rmiEndpoint fornecido
-                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));                
+                QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));          
+                this.ativos.set(this.barrelIndex, 1);      
                 
                 if (this.barrel_ports.get(this.barrelIndex) % 2 == 0) {
                     par = true;
@@ -243,6 +244,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                             stmt.close();
                         } catch (Exception e) {
                             e.printStackTrace();
+                            break;
                         }
                     }
                     
@@ -275,12 +277,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
     public String admin() throws RemoteException{
 
-        int valorDownloaders = 0, valorBarrels = 0;
+        int valorDownloaders = 0;
 
         try {
             // ligar ao server da fila de urls registado no rmiEndpoint fornecido
             UrlQueueInterface urlqueue = (UrlQueueInterface) LocateRegistry.getRegistry(this.rmiPortQueue).lookup(this.rmiEndpointQueue);
-            valorBarrels = urlqueue.getNumDownloaders();
+            valorDownloaders = urlqueue.getNumDownloaders();
         } catch (NotBoundException e) {
             System.out.println("Erro: não existe um servidor registado no endpoint '" + this.rmiEndpointQueue + "'!");
         } catch (AccessException e) {
@@ -289,10 +291,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             System.out.println("Erro: Não foi possível encontrar o registo");
         }
 
-        for (int i : this.ativos) {
-            if(i == 1) valorBarrels ++;
+        String barrelsAtivos = "";
+
+        for (int i = 0; i < this.barrel_ports.size(); i++) {
+            if(this.ativos.get(i) == 1) {
+                barrelsAtivos += "IP: /" + this.barrel_endpoints.get(i) + ":" + this.barrel_ports.get(i) + "\n";
+            }
         }
-        return valorBarrels + " Barrels disponiveis e " + valorDownloaders + " Downloaders disponiveis";
+        return barrelsAtivos + valorDownloaders + " Downloaders disponiveis";
     }
 
     public CopyOnWriteArrayList<String> searchUrl(String name, String query){
@@ -310,6 +316,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                 QueryIf barrel = (QueryIf) LocateRegistry.getRegistry(this.barrel_ports.get(this.barrelIndex)).lookup(this.barrel_endpoints.get(this.barrelIndex));
                 
                 CopyOnWriteArrayList<String> response = barrel.execURL(query);   
+
+                this.ativos.set(this.barrelIndex, 1);
 
                 if (this.ativos.get(this.barrelIndex) == 0) this.ativos.set(this.barrelIndex, 1);
                 this.barrelIndex ++;
@@ -583,6 +591,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         return false;
     }
      
+
     public boolean login(String name, String password) throws RemoteException{
         if (checkDataBase(name, password)){
             return true;
@@ -638,7 +647,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
 
         // tenta conectar na base de dados
         if (!searchModule.dataBaseInitialize()){
-            searchModule.unexport();
+            searchModule.unexport();    
             return;
         }
     }
