@@ -478,7 +478,7 @@ public class Downloader {
         // instanciar um Downloader e apanhar erros
         Downloader downloader;
         try {
-            downloader = new Downloader(rmiPort, args[1], args[2], multicastPort, args[4], 2000);
+            downloader = new Downloader(rmiPort, args[1], args[2], multicastPort, args[4], 4000);
         } catch (IOException e) {
             System.out.println("ERRO: Ocorreu um erro a criar o socket Multicast!");
             return;

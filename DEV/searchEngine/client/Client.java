@@ -50,10 +50,11 @@ public class Client{
         this.lastSearch = null;
     }
 
-    public boolean searchURL(SearchResponse searchModuleIF){
+    public boolean searchURL(Scanner sc, SearchResponse searchModuleIF){
+
+        sc.nextLine();
 
         CopyOnWriteArrayList<String> response;
-        Scanner sc = new Scanner(System.in);
 
         while (true){
 
@@ -122,10 +123,11 @@ public class Client{
     /**
      * Pede ao utilizador por uma string de palavras chave para pesquisar
      */
-    public boolean searchMenu(SearchResponse searchModuleIF){
+    public boolean searchMenu(Scanner sc, SearchResponse searchModuleIF){
+
+        sc.nextLine();
 
         CopyOnWriteArrayList<String> response = null;
-        Scanner sc = new Scanner(System.in);
 
         while (true){
 
@@ -205,9 +207,7 @@ public class Client{
     /**
      * Pede ao utilizador um URL e envia ao SearchModule para pesquisar.
      */
-    public boolean sendURL(SearchResponse searchModuleIF){
-
-        Scanner sc = new Scanner(System.in);
+    public boolean sendURL(Scanner sc, SearchResponse searchModuleIF){
 
         sc.nextLine();
 
@@ -251,9 +251,9 @@ public class Client{
      * 
      * @return true em caso de login bem sucedido
      */
-    public boolean logar(SearchResponse searchModuleIF){
+    public boolean logar(Scanner sc, SearchResponse searchModuleIF){
 
-        Scanner sc = new Scanner(System.in);
+        sc.nextLine();
 
         System.out.print("Username: ");
         
@@ -286,9 +286,9 @@ public class Client{
      * 
      * @return true em caso de registo bem sucedido
      */
-    public boolean registo(SearchResponse searchModuleIF){
+    public boolean registo(Scanner sc, SearchResponse searchModuleIF){
 
-        Scanner sc = new Scanner(System.in);
+        sc.nextLine();
 
         System.out.print("Username: ");
         
@@ -318,9 +318,7 @@ public class Client{
     /**
      * Menu de utilizador
      */
-    public int menu(SearchResponse searchModuleIF, int num){
-
-        Scanner sc = new Scanner(System.in);
+    public int menu(Scanner sc, SearchResponse searchModuleIF, int num){
 
         boolean loop = true;
         while (loop){
@@ -337,14 +335,14 @@ public class Client{
 
                     // indexar um URL
                     case 1:
-                        if (!this.sendURL(searchModuleIF)){
+                        if (!this.sendURL(sc, searchModuleIF)){
                             return num;
                         }
                         break;
 
                     // pesquisar
                     case 2:
-                        if (!this.searchMenu(searchModuleIF)){
+                        if (!this.searchMenu(sc, searchModuleIF)){
                             return num;
                         }
                         break;
@@ -354,7 +352,7 @@ public class Client{
                         if (this.name != null) {
                             System.out.println("Já estás logado.");
                         }
-                        else if (this.registo(searchModuleIF)){
+                        else if (this.registo(sc, searchModuleIF)){
                             ;
                         }
                         else {
@@ -367,7 +365,7 @@ public class Client{
                         if (this.name != null) {
                             System.out.println("Já estás logado.");
                         }
-                        else if (this.logar(searchModuleIF)){
+                        else if (this.logar(sc, searchModuleIF)){
                             ;
                         }
                         else {
@@ -390,7 +388,7 @@ public class Client{
                             System.out.println("Não estás logado.");
                         }
                         else {
-                            if (!this.searchURL(searchModuleIF)){
+                            if (!this.searchURL(sc, searchModuleIF)){
                                 return num;
                             }
                         }
@@ -421,8 +419,6 @@ public class Client{
             }
 
         }
-
-        sc.close();
         return -1;
     }
 
@@ -479,20 +475,22 @@ public class Client{
             return;
         }
 
+        Scanner sc = new Scanner(System.in);
+
         int index = 0, valor = 0;
         while (true){
 
             if (index == client.rmiEndpointSM.size()) index = 0;
 
-            try{
+            try {
     
                 // ligar ao server registado no rmiEndpoint fornecido
                 searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(client.rmiPortSM.get(index)).lookup(client.rmiEndpointSM.get(index));
     
                 // menu da aplicação
-                valor = client.menu(searchModuleIF, valor);
+                valor = client.menu(sc, searchModuleIF, valor);
                 if(valor == -1){
-                    return;
+                    break;
                 }
 
             } catch (NotBoundException e) {
@@ -505,5 +503,7 @@ public class Client{
     
         }
         
+        sc.close();
     }
+
 }

@@ -677,7 +677,7 @@ public class Barrel extends UnicastRemoteObject implements QueryIf, Runnable {
         // pacotes do grupo multicast
         Barrel barrel;
         try {
-            barrel = new Barrel(rmiPort, args[1], args[2], multicastPort, 5000);
+            barrel = new Barrel(rmiPort, args[1], args[2], multicastPort, 6000);
 
         } catch (RemoteException e) {
             System.out.println("Erro: Ocorreu um erro de RMI ao criar o Barrel!");
