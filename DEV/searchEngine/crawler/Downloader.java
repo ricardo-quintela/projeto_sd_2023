@@ -404,7 +404,7 @@ public class Downloader {
                 // extrair um URL da fila (BLOQUEANTE)
                 this.log.info(toString(),
                         "Procurando outro URL em 'localhost:" + this.queuePort + "/" + this.queueEndpoint + "'...");
-                url = queue.remove(toString());
+                url = queue.removeURL(toString(), this.name, 123);
                 this.log.info(toString(), "Recebido '" + url + "'. A extrair...");
 
                 // analisar o website em URL e extrair as palavras para o indice

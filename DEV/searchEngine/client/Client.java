@@ -133,7 +133,6 @@ public class Client{
                 System.out.print("Googol - Pesquisa\nDigite palavras-chave para pesquisar e '/back' para voltar atras.\nDigite: ");
                 
                 // ler uma linha do stdin
-                sc.nextLine();
                 this.lastSearch = sc.nextLine();
 
             }
