@@ -11,7 +11,6 @@ import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import searchEngine.search.SearchResponse;
-import searchEngine.utils.Log;
 import searchEngine.fileWorker.TextFileWorker;
 
 public class Client{
@@ -23,8 +22,6 @@ public class Client{
 
     private String lastSearch;
 
-    private Log log;
-
     /**
      * Construtor por omissão da classe {@code Client}
      */
@@ -33,7 +30,6 @@ public class Client{
         this.rmiHostSM = new ArrayList<>();
         this.rmiEndpointSM = new ArrayList<>();
         this.rmiPortSM = new ArrayList<>();
-        this.log = new Log();
         this.lastSearch = null;
     }
 
@@ -46,7 +42,6 @@ public class Client{
         this.rmiHostSM = new ArrayList<>();
         this.rmiEndpointSM = new ArrayList<>();
         this.rmiPortSM = new ArrayList<>();
-        this.log = new Log();
         this.lastSearch = null;
     }
 
