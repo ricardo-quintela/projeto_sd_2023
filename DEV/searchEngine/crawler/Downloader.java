@@ -127,7 +127,6 @@ public class Downloader {
 
             // array de tokens que vão ser separados de pontuação
             String cleanTokens[], texto = "", wordsForText[];
-            int j = 0;
 
             while (tokens.hasMoreElements()) {
 
@@ -136,14 +135,8 @@ public class Downloader {
                 // retirar pontuaçao dos tokens
                 cleanTokens = aux.toLowerCase().split("[^a-zA-Z0-9]+");
 
-                if (j++ == 0){
-                    wordsForText = aux.split(" ;");
-                    for (int i = 0; i < 10 && i < wordsForText.length; i++) {
-                        texto += wordsForText[i];
-                        if (i < 9) {
-                            texto += " ";
-                        }
-                    }
+                if (texto.length() < 70){
+                    texto += aux;
                 }
 
                 if (cleanTokens.length == 0) {
@@ -157,9 +150,19 @@ public class Downloader {
 
             }
 
-            this.wordIndex.setTexto(texto);
-            this.wordIndex.setTitulo(doc.title());
+            if (texto.length() == 0) {
+                this.wordIndex.setTexto("Empty");
+            } else {
+                this.wordIndex.setTexto(texto);
+            }
+            if (doc.title().length() == 0) {
+                this.wordIndex.setTitulo("Empty");
+            } else {
+                this.wordIndex.setTitulo(doc.title());
+            }
             this.wordIndex.setUrl(url);
+
+
 
             // retirar as ligaçoes da pagina
             Elements links = doc.select("a[href]");
@@ -171,6 +174,14 @@ public class Downloader {
                 this.wordIndex.addLink(link.attr("abs:href"));
                 queue.add(link.attr("abs:href"));
 
+            }
+
+            if (links.size() == 0){
+                this.wordIndex.addLink(" ");
+            }
+
+            if (links.size() == 0){
+                this.wordIndex.put(url, " ");
             }
 
         } catch (IllegalArgumentException e) {
