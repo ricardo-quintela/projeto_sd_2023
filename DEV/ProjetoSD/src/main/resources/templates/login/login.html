@@ -4,7 +4,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
-    <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="../../static/global.css">
+    <link rel="stylesheet" href="../../static/login_styles.css">
     <title>Googol</title>
 </head>
 <body>
@@ -12,13 +13,21 @@
     <div class="main_container">
 
                 <h1 class="title">Googol</h1>
+                <h1 class="subtitle">Login</h1>
 
-                <form action="GET">
+                <div class="login-container">
 
-                    <input type="text" name="query_input" id="query_input">
-                    <input type="button" value="Pesquisar">
+                    <form action="GET">
 
-                </form>
+                        <span class="text-label">Nome de utilizador</span>
+                        <input type="text" name="name" class="login-creds">
+                        <span class="text-label">Palavra-Passe</span>
+                        <input type="password" name="password" class="login-creds">
+                        <input type="button" value="Entrar">
+    
+                    </form>
+
+                </div>
 
     </div>
 

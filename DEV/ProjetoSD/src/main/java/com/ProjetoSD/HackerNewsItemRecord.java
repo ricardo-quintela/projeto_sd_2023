@@ -1,4 +1,4 @@
-package webService.src.main.java.com.ProjetoSD;
+package com.ProjetoSD;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
 
 import searchEngine.search.SearchResponse;
@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-@RestController
+@Controller
 public class Controllers {
 
     private static final Logger logger = LoggerFactory.getLogger(Controllers.class);
@@ -46,6 +46,12 @@ public class Controllers {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    @GetMapping("/")
+    private String home(){
+        return "home/index";
     }
 
     /**
@@ -102,9 +108,9 @@ public class Controllers {
      *
      * @param palavra String com todas as palavras separadas por espacos
      */
-    // url/teste/palavra=a%20b%20c
+    // url/teste/palavra=a%20b%20c&is_hacker_news=true
     @GetMapping("/search_palavras")
-    private void pesquisa(@RequestParam(name="palavra", required = true) String palavra){
+    private void pesquisa(@RequestParam(name="palavra", required = true) String palavra, @RequestParam(name="is_hacker_news", required = true) Boolean isHackerNews){
 
         if (searchModuleIF != null){
 

@@ -1,4 +1,4 @@
-package webService.src.main.java.com.ProjetoSD;
+package com.ProjetoSD;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
