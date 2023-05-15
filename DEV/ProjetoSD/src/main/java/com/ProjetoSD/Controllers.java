@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import searchEngine.search.SearchResponse;
 
-import java.lang.reflect.Array;
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -26,13 +26,16 @@ public class Controllers {
     private static final Logger logger = LoggerFactory.getLogger(Controllers.class);
     private static SearchResponse searchModuleIF = null;
 
+    /**
+     * Permite a conexao RMI com o search model
+     */
     @Bean
     @Autowired
     private void makeConnection(){
-        System.out.println("PASSOU AQUI");
         if (searchModuleIF == null){
             try{
                 searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(2002).lookup("search-module");
+                //searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(IP, 2002).lookup("search-module");
             }  catch (NotBoundException e) {
                 System.out.println("Erro: não existe um servidor registado no endpoint !");
             } catch (AccessException e) {
@@ -44,6 +47,28 @@ public class Controllers {
         }
     }
 
+    /**
+     *
+     */
+    // url/teste/url=texto
+    @GetMapping("/admin")
+    private void admin(){
+
+        if (searchModuleIF != null){
+            try{
+                System.out.println(searchModuleIF.admin());
+            } catch (Exception e){
+                System.out.println("Erro");
+            }
+        } else {
+            System.out.println("UPS");
+        }
+    }
+
+    /**
+     *
+     * @param url
+     */
     // url/teste/url=texto
     @GetMapping("/search_url")
     private void search_url(@RequestParam(name="url", required = true) String url){
@@ -60,13 +85,138 @@ public class Controllers {
         }
     }
 
+    /**
+     * Recebe um url e indexa o.
+     *
+     * @param url string de url
+     */
     // url/teste/url=texto
     @GetMapping("/indexa_url")
     private void indexa_url(@RequestParam(name="url", required = true) String url){
+        indexa_url_aux(url);
+    }
+
+    /**
+     * Procura por pesquisas que contenham todas as palavras pedidas.
+     *
+     * @param palavra String com todas as palavras separadas por espacos
+     */
+    // url/teste/palavra=a%20b%20c
+    @GetMapping("/search_palavras")
+    private void pesquisa(@RequestParam(name="palavra", required = true) String palavra){
 
         if (searchModuleIF != null){
+
+            // Separamos em palavras simples, exceto a ultima que dira informacao extra
+            String[] palavras = palavra.split(" ", 2);
+            CopyOnWriteArrayList<String> array = new CopyOnWriteArrayList<>(Arrays.asList(palavras).subList(0, palavras.length - 1));
+
             try{
-                System.out.println(url);
+                // Fazemos a pesquisa das palavras
+                searchModuleIF.execSearch("Cliente", array);
+
+                // Se a ultima palavra assim disser, procuramos tambem no hacker
+                if (palavras[palavras.length - 1].equals("true")){
+                    hacker_pesquisa_por_palavra(array);
+                }
+
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("UPS");
+        }
+    }
+
+
+
+    /**
+     * Procura pelas top stories escritas pelo autor pedido.
+     *
+     * @param user autor
+     */
+    @GetMapping("/top_user")
+    private void hacker_pesquisa_por_autor(@RequestParam(name="user", required = true) String user){
+        // url/teste/palavra=a%20b%20c
+
+        // Site das top stories
+        String str = "https://hacker-news.firebaseio.com/v0/topstories.json";
+
+        // Download dos ids das top stories
+        RestTemplate restTemplate = new RestTemplate();
+        List<Integer> hacker = restTemplate.getForObject(str , List.class);
+
+        if (hacker == null) return;
+
+        // Percorremos todos os ids e verificamos os seus autores
+        List<String> urls = new ArrayList<>();
+        for (Integer i: hacker) {
+            RestTemplate rest_2 = new RestTemplate();
+            HackerNewsItemRecord hackerNewsItemRecord = rest_2.getForObject("https://hacker-news.firebaseio.com/v0/item/" + i + ".json", HackerNewsItemRecord.class);
+
+            if (hackerNewsItemRecord == null) continue;
+
+            // Verificamos se o autor e o correto
+            if (!hackerNewsItemRecord.by().equals(user)) {
+                indexa_url_aux(hackerNewsItemRecord.url());
+            }
+        }
+    }
+
+
+
+
+    /**
+     * Liga-se ao hackerNews e procura pelas "top stories" que contenham as palavras desejadas.
+     * As encontradas têm o seu url indexado na fila.
+     *
+     * @param array CopyOnWriteArrayList<String> com as palavras da pesquisa
+     */
+    private void hacker_pesquisa_por_palavra(CopyOnWriteArrayList<String> array){
+
+        // Ligacao ao site e vars necessarias
+        String str = "https://hacker-news.firebaseio.com/v0/topstories.json";
+        boolean verificador = true;
+
+        // Download dos ids das top stories
+        RestTemplate restTemplate = new RestTemplate();
+        List<Integer> hacker = restTemplate.getForObject(str , List.class);
+
+        if (hacker == null) return;
+
+        // Percorrer todos os ids
+        for (Integer i: hacker) {
+            verificador = true;
+
+            RestTemplate rest_2 = new RestTemplate();
+            HackerNewsItemRecord hackerNewsItemRecord = rest_2.getForObject("https://hacker-news.firebaseio.com/v0/item/" + i + ".json", HackerNewsItemRecord.class);
+
+            if (hackerNewsItemRecord == null || hackerNewsItemRecord.text() == null){
+                continue;
+            }
+
+            // Sempre que se encontre uma palavra que não esteja presente nao adicionamos o url e passamos ao proxima
+            for (String palavra: array){
+                if (!hackerNewsItemRecord.text().contains(palavra)){
+                    verificador = false;
+                    break;
+                }
+            }
+
+            if (verificador) {
+                indexa_url_aux(hackerNewsItemRecord.url());
+            }
+        }
+    }
+
+    /**
+     * Funcao auxiliar que recebe um url e indexa o.
+     *
+     * @param url String url
+     */
+    private void indexa_url_aux(String url) {
+        if (searchModuleIF != null && url != null){
+            try{
                 searchModuleIF.execURL(url);
             } catch (Exception e){
                 System.out.println("Erro");
@@ -74,98 +224,6 @@ public class Controllers {
         } else {
             System.out.println("UPS");
         }
-    }
-
-    // url/teste/palavra=a%20b%20c
-    @GetMapping("/search_palavras")
-    private void pesquisa(@RequestParam(name="palavra", required = true) String palavra){
-
-        if (searchModuleIF != null){
-            CopyOnWriteArrayList<String> array = new CopyOnWriteArrayList<>();
-            String[] palavras = palavra.split(" ", 2);
-
-            Collections.addAll(array, palavras);
-            try{
-                System.out.println(searchModuleIF.execSearch("Cliente", array));
-
-            } catch (Exception e){
-                System.out.println("Erro");
-            }
-        } else {
-            System.out.println("UPS");
-        }
-    }
-
-    // url/teste/palavra=a%20b%20c
-    @GetMapping("/top_user")
-    private void hacker_pesquisa_por_autor(@RequestParam(name="user", required = true) String user){
-
-        String str = "https://hacker-news.firebaseio.com/v0/topstories.json";
-
-        RestTemplate restTemplate = new RestTemplate();
-        List<Integer> hacker = restTemplate.getForObject(str , List.class);
-
-        List<String> urls = new ArrayList<>();
-        for (int i = 0; i < hacker.size(); i++) {
-            RestTemplate rest_2 = new RestTemplate();
-            HackerNewsItemRecord hackerNewsItemRecord = rest_2.getForObject("https://hacker-news.firebaseio.com/v0/item/" + i + ".json", HackerNewsItemRecord.class);
-
-            if (hackerNewsItemRecord == null) {
-                continue;
-            }
-
-            // Neste momento apenas verifica se a palavra é exatamente igual
-            if (!hackerNewsItemRecord.by().equals(user)) {
-                urls.add(hackerNewsItemRecord.url());
-            }
-        }
-
-        if (searchModuleIF != null && urls.size() > 0){
-            try{
-                for (String url : urls) {
-                    System.out.println(searchModuleIF.execURL(url));
-                }
-            } catch (Exception e){
-                System.out.println("Erro");
-            }
-        } else {
-            System.out.println("UPS");
-        }
-    }
-
-    @GetMapping("/search/")
-    private void indexTopStories(@RequestParam(name="palavra", required = false) String palavra){
-
-        //TODO: ligar rmi hacker e receber as topstories
-        String str = "https://hacker-news.firebaseio.com/v0/topstories.json";
-
-        RestTemplate restTemplate = new RestTemplate();
-        List<Integer> hacker = restTemplate.getForObject(str , List.class);
-
-        System.out.println(hacker);
-
-        //TODO: quais têm as palavras
-        List<String> urls = new ArrayList<>();
-        for (int i = 0; i < hacker.size(); i++) {
-            RestTemplate rest_2 = new RestTemplate();
-            HackerNewsItemRecord hackerNewsItemRecord = rest_2.getForObject("https://hacker-news.firebaseio.com/v0/item/" + i + ".json", HackerNewsItemRecord.class);
-
-            if (hackerNewsItemRecord == null) {
-                continue;
-            }
-
-            // Neste momento apenas verifica se a palavra é exatamente igual
-            if (!hackerNewsItemRecord.text().equals(palavra)) {
-                urls.add(hackerNewsItemRecord.url());
-            }
-        }
-
-        //TODO: ligar ao searchmodel e enviar os ips
-        if (urls.size() > 0){
-            ;
-        }
-
-        return;
     }
 
 }
