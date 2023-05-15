@@ -45,7 +45,7 @@ public class Controllers {
     }
 
     // url/teste/url=texto
-    @GetMapping("/url")
+    @GetMapping("/search_url")
     private void search_url(@RequestParam(name="url", required = true) String url){
 
         if (searchModuleIF != null){
@@ -61,7 +61,7 @@ public class Controllers {
     }
 
     // url/teste/url=texto
-    @GetMapping("/url")
+    @GetMapping("/indexa_url")
     private void indexa_url(@RequestParam(name="url", required = true) String url){
 
         if (searchModuleIF != null){
@@ -77,7 +77,7 @@ public class Controllers {
     }
 
     // url/teste/palavra=a%20b%20c
-    @GetMapping("/search")
+    @GetMapping("/search_palavras")
     private void pesquisa(@RequestParam(name="palavra", required = true) String palavra){
 
         if (searchModuleIF != null){
@@ -88,6 +88,43 @@ public class Controllers {
             try{
                 System.out.println(searchModuleIF.execSearch("Cliente", array));
 
+            } catch (Exception e){
+                System.out.println("Erro");
+            }
+        } else {
+            System.out.println("UPS");
+        }
+    }
+
+    // url/teste/palavra=a%20b%20c
+    @GetMapping("/top_user")
+    private void hacker_pesquisa_por_autor(@RequestParam(name="user", required = true) String user){
+
+        String str = "https://hacker-news.firebaseio.com/v0/topstories.json";
+
+        RestTemplate restTemplate = new RestTemplate();
+        List<Integer> hacker = restTemplate.getForObject(str , List.class);
+
+        List<String> urls = new ArrayList<>();
+        for (int i = 0; i < hacker.size(); i++) {
+            RestTemplate rest_2 = new RestTemplate();
+            HackerNewsItemRecord hackerNewsItemRecord = rest_2.getForObject("https://hacker-news.firebaseio.com/v0/item/" + i + ".json", HackerNewsItemRecord.class);
+
+            if (hackerNewsItemRecord == null) {
+                continue;
+            }
+
+            // Neste momento apenas verifica se a palavra é exatamente igual
+            if (!hackerNewsItemRecord.by().equals(user)) {
+                urls.add(hackerNewsItemRecord.url());
+            }
+        }
+
+        if (searchModuleIF != null && urls.size() > 0){
+            try{
+                for (String url : urls) {
+                    System.out.println(searchModuleIF.execURL(url));
+                }
             } catch (Exception e){
                 System.out.println("Erro");
             }
