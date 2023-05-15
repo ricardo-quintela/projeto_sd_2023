@@ -1,0 +1,4 @@
+grant {
+    permission java.rmi.RMIClassLoaderPermission "*";
+    permission java.security.AllPermission;
+}; 
