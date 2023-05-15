@@ -1,4 +1,4 @@
-package com.ProjetoSD;
+package webService.src.main.java.com.ProjetoSD;
 
 public class Message {
 

@@ -1,0 +1,22 @@
+.login-container{
+    display: flex;
+    justify-content: center;
+    padding: 40px 100px 20px 100px;
+    border-radius: 10px;
+    background-color: #605F5E;
+}
+
+.text-label{
+    font-family: "Roboto";
+    color: #FFFFFF;
+}
+
+
+.main_container .login-creds{
+    margin-bottom: 20px;
+    display: flex;
+    border-style: solid;
+    border-width: 2px;
+    width: 150px;
+    height: 30px;
+}

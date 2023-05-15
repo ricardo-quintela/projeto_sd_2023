@@ -1,4 +1,4 @@
-package com.ProjetoSD;
+package webService.src.test.java.com.ProjetoSD;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

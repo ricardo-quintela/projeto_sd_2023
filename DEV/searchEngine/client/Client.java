@@ -186,10 +186,13 @@ public class Client{
                     page = sc.nextInt();
 
                 } catch (RemoteException e){
-                    e.printStackTrace();
+                    System.out.println("Ocorreu um erro.\n");
                     return false;
+                } catch (InputMismatchException e) {
+                    System.out.println("Deve inserir um numero.\n");
+                    sc.nextLine();
                 } catch (NumberFormatException e){
-                    System.out.print("Deve inserir um numero.");
+                    System.out.println("Deve inserir um numero.\n");
                 }
             }
 

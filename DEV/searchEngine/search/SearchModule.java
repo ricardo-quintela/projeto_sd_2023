@@ -136,10 +136,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     }
 
     public CopyOnWriteArrayList<String> pagination(CopyOnWriteArrayList<String> response, int page) throws RemoteException{
-        System.out.println(rmiEndpoint);
-        for (int i = page * 10 - 10; i < 10*page && i < response.size(); i++) {
-            System.out.println(response);
-        }
         int indiceInicial = page * 10 - 10;
         if (indiceInicial > response.size()){
             return null;
@@ -217,7 +213,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
                                                 " WHERE link.url = '" + entry.getKey() + "'" +
                                                 " ORDER BY contagem";
                                 ResultSet rs = stmt.executeQuery(sql);
-                                System.out.println(rs.toString());
+
                                 while (rs.next()) {
                                     retornar = "Url: " + rs.getString("url") + " | Titulo: " + rs.getString("titulo") + " | Texto: " + rs.getString("texto")  + " | Contagem: "  + rs.getInt("contagem");
                                     resultList.add(retornar);

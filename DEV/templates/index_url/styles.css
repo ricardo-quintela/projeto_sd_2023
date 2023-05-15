@@ -1,0 +1,13 @@
+.text-label{
+    display: flex;
+    text-align: center;
+    font-family: "Roboto";
+    color: rgb(150, 150, 150);
+}
+
+.main_container #url_input{
+    border-style: solid;
+    border-width: 2px;
+    width: 300px;
+    height: 30px;
+}
