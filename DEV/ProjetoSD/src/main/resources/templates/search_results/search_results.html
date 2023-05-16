@@ -4,8 +4,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
-    <link rel="stylesheet" href="../../static/global.css">
-    <link rel="stylesheet" href="../../static/search_results.css">
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="search_results.css">
     <title>Googol</title>
 </head>
 <body>
@@ -19,6 +19,7 @@
         <form action="/search_words" method="get">
 
             <input type="text" name="palavra" id="query_input">
+            <input type="checkbox" name="is_hacker_news" value="true">
             <input type="submit" value="Pesquisar">
 
         </form>
@@ -53,15 +54,12 @@
 </div>
 
 
-</thead>
-    <tbody>
-    <tr th:each="empl, iStat : ${result}">
-        <td width="20px" th:text="${empl.url}">
-        </td><td th:text="${empl.titulo}">
-    </td><td th:text="${empl.texto}">
-    </td></tr>
-    </tbody>
-</table>
+
+<tr th:each="empl, iStat : ${result}">
+    <td width="20px" th:text="${empl.url}"></td><br>
+    <td th:text="${empl.titulo}"></td><br>
+    <td th:text="${empl.texto}"></td><br>
+</tr>
 
 
 </body>

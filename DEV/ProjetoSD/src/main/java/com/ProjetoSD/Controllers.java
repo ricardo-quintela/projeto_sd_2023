@@ -120,7 +120,7 @@ public class Controllers {
      */
     // url/teste/palavra=a%20b%20c&is_hacker_news=true
     @GetMapping("/search_words")
-    private String pesquisa(@RequestParam(name="palavra", required = false) String palavra, @RequestParam(name="is_hacker_news", required = false) Boolean is_hacker_news, Model model){
+    private String pesquisa(@RequestParam(name="palavra", required = false) String palavra, @RequestParam(name="is_hacker_news", required = false) String is_hacker_news, Model model){
 
         if (palavra != null && searchModuleIF != null){
 
@@ -147,7 +147,8 @@ public class Controllers {
                 model.addAttribute("result", results);
 
                 // Se a ultima palavra assim disser, procuramos tambem no hacker
-                if (is_hacker_news){
+                if (is_hacker_news != null && is_hacker_news.equals("true")){
+                    System.out.println("OLA EU SOU FIXE");
                     hacker_pesquisa_por_palavra(array);
                 }
 
@@ -158,7 +159,7 @@ public class Controllers {
             System.out.println("UPS");
         }
 
-        return "home/index";
+        return "search_results/search_results";
     }
 
 

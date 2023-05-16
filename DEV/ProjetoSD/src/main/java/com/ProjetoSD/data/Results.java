@@ -2,9 +2,9 @@ package com.ProjetoSD.data;
 
 public class Results {
 
-    private String titulo;
-    private String texto;
-    private String url;
+    public String titulo;
+    public String texto;
+    public String url;
 
     public Results(String titulo, String texto, String url){
         this.texto = texto;
