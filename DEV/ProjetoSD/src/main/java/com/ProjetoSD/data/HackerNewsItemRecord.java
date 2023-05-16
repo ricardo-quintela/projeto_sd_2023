@@ -1,4 +1,4 @@
-package com.ProjetoSD;
+package com.ProjetoSD.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

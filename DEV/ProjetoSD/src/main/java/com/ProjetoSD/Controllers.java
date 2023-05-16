@@ -1,9 +1,11 @@
 package com.ProjetoSD;
 
+import com.ProjetoSD.data.HackerNewsItemRecord;
 import com.ProjetoSD.data.Results;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,7 +17,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.ui.Model;
 
-import org.springframework.web.servlet.view.RedirectView;
 import searchEngine.search.SearchResponse;
 
 import java.nio.charset.StandardCharsets;
@@ -29,12 +30,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+
 @Controller
 public class Controllers {
 
     private static final Logger logger = LoggerFactory.getLogger(Controllers.class);
     private static SearchResponse searchModuleIF = null;
     private boolean logado;
+
+    @Value("${searchModuleIP}")
+    private String searchModuleIP;
+    @Value("${searchModulePort}")
+    private int searchModulePort;
+    @Value("${searchModuleEndpoint}")
+    private String searchModuleEndpoint;
 
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -46,17 +55,18 @@ public class Controllers {
 
 
 
-
     /**
      * Permite a conexao RMI com o search module
      */
     @Bean
     @Autowired
     private void makeConnection(){
+
+
         if (searchModuleIF == null){
             try{
-                searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(2002).lookup("search-module");
-                //searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(IP, 2002).lookup("search-module");
+                //earchModuleIF = (SearchResponse) LocateRegistry.getRegistry(2002).lookup("search-module");
+                searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(this.searchModuleIP, this.searchModulePort).lookup(this.searchModuleEndpoint);
             }  catch (NotBoundException e) {
                 System.out.println("Erro: não existe um servidor registado no endpoint !");
             } catch (AccessException e) {
