@@ -1,0 +1,68 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+    <link rel="stylesheet" href="../../static/global.css">
+    <link rel="stylesheet" href="../../static/search_results.css">
+    <title>Googol</title>
+</head>
+<body>
+
+<div class="search_container">
+
+    <div class="container">
+
+        <h1>Googol</h1>
+
+        <form action="/search_words" method="get">
+
+            <input type="text" name="palavra" id="query_input">
+            <input type="submit" value="Pesquisar">
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<input type="checkbox" name="" id="openmenu">
+
+<div class="menu">
+
+    <label for="openmenu">
+        <div id="box">
+            <span class="bars"></span>
+            <span class="bars"></span>
+            <span class="bars"></span>
+        </div>
+    </label>
+
+    <a href="/"><h1>Googol</h1></a>
+
+    <div class="items">
+
+        <a href="/">Pesquisar</a>
+        <a href="/index_url">Indexar URL</a>
+        <a href="/login">Login</a>
+
+    </div>
+
+</div>
+
+
+</thead>
+    <tbody>
+    <tr th:each="empl, iStat : ${result}">
+        <td width="20px" th:text="${empl.url}">
+        </td><td th:text="${empl.titulo}">
+    </td><td th:text="${empl.texto}">
+    </td></tr>
+    </tbody>
+</table>
+
+
+</body>
+</html>
