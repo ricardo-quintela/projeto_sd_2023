@@ -98,9 +98,14 @@ public class Controllers {
      * @param url string de url
      */
     // url/teste/url=texto
-    @GetMapping("/indexa_url")
-    private void indexa_url(@RequestParam(name="url", required = true) String url){
-        indexa_url_aux(url);
+    @GetMapping("/index_url")
+    private String indexa_url(@RequestParam(name="url", required = false) String url){
+
+        if (url != null){
+            indexa_url_aux(url);
+        }
+
+        return "index_url/index_url";
     }
 
     /**

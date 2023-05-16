@@ -5,10 +5,12 @@ body{
 
 .main_container{
 
-    position: relative;
+    position: absolute;
     text-align: center;
-    top: 50%;
-    transform: translateY(-50%);
+    vertical-align: middle;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 
     width: fit-content;
     margin: 0 auto;
@@ -44,7 +46,7 @@ body{
     height: 30px;
 }
 
-.main_container input[type=button]{
+.main_container input[type=submit]{
     background: linear-gradient(to right, #07b8fe, #6878ff);
     border: none;
     color: white;
@@ -56,7 +58,7 @@ body{
     border-radius: 2px;
 }
 
-.main_container input[type=button]:hover{
+.main_container input[type=submit]:hover{
     color: #a5a5a5;
     transition: 0.3s;
 }
