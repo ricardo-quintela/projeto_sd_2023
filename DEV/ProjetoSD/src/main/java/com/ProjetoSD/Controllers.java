@@ -54,8 +54,8 @@ public class Controllers {
 
 
     @GetMapping("/")
-    private RedirectView home(){
-        return new RedirectView("/search_words");
+    private String home(){
+        return "index";
     }
 
     /**
@@ -121,7 +121,7 @@ public class Controllers {
      */
     // url/teste/palavra=a%20b%20c&is_hacker_news=true
     @GetMapping("/search_words")
-    private String pesquisa(@RequestParam(name="palavra", required = false) String palavra, @RequestParam(name="is_hacker_news", required = false) String is_hacker_news, Model model){
+    private String pesquisa(@RequestParam(name="palavra", required = false) String palavra, @RequestParam(name="is_hacker_news", required = false) String is_hacker_news, @RequestParam(name="page", required = true, defaultValue = "1") int page, Model model){
 
         if (palavra != null && searchModuleIF != null){
 
@@ -133,9 +133,19 @@ public class Controllers {
                 System.out.println(alguma_coisa);
             }
 
+            CopyOnWriteArrayList<String> resultados;
+
             try{
-                // Fazemos a pesquisa das palavras
-                CopyOnWriteArrayList<String> resultados = searchModuleIF.execSearch("Cliente", array);
+
+                // paginação - default = 1
+                if (page == 1){
+                    // Fazemos a pesquisa das palavras
+                    resultados = searchModuleIF.execSearch("Cliente", array);
+                } else if (page > 1){
+                    resultados = searchModuleIF.pagination(searchModuleIF.execSearch("Cliente", array), page);
+                } else {
+                    return "404";
+                }
 
                 CopyOnWriteArrayList<Results> results = new CopyOnWriteArrayList<>();
                 for (String str: resultados){
@@ -146,6 +156,7 @@ public class Controllers {
                     results.add(new Results(titulo, texto, url));
                 }
                 model.addAttribute("results", results);
+                model.addAttribute("searched_string", palavra);
 
                 // Se a ultima palavra assim disser, procuramos tambem no hacker
                 if (is_hacker_news != null && is_hacker_news.equals("true")){

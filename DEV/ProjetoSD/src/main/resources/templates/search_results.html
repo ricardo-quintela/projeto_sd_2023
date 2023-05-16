@@ -1,0 +1,79 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="search_results.css">
+    <title>Googol</title>
+</head>
+<body>
+
+<div class="search_container">
+
+    <div class="container">
+
+        <h1>Googol</h1>
+
+        <form action="/search_words" method="get">
+
+            <input type="text" name="palavra" id="query_input" th:value="${searched_string}">
+            <input type="checkbox" name="is_hacker_news" value="true">
+            <input type="submit" value="Pesquisar">
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<input type="checkbox" name="" id="openmenu">
+
+<div class="menu">
+
+    <label for="openmenu">
+        <div id="box">
+            <span class="bars"></span>
+            <span class="bars"></span>
+            <span class="bars"></span>
+        </div>
+    </label>
+
+    <a href="/"><h1>Googol</h1></a>
+
+    <div class="items">
+
+        <a href="/">Pesquisar</a>
+        <a href="/index_url">Indexar URL</a>
+        <a href="/login">Login</a>
+
+    </div>
+
+</div>
+
+
+<div class="search-results-container">
+
+    <ul>
+
+        <li th:each="result, iStat : ${results}">
+
+            <div class="search-result">
+                <a th:href="${result.url}">
+                    <h1 th:text="${result.titulo}"></h1>
+                </a>
+                <p th:text="${result.url}"></p>
+                <p th:text="${result.texto}"></p>
+            </div>
+
+        </li>
+
+    </ul>
+
+</div>
+
+
+</body>
+</html>
