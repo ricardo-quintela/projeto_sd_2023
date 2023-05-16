@@ -5,6 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.stereotype.Controller;
@@ -31,6 +35,16 @@ public class Controllers {
     private static final Logger logger = LoggerFactory.getLogger(Controllers.class);
     private static SearchResponse searchModuleIF = null;
     private boolean logado;
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+
+    @Autowired
+    public Controllers(SimpMessagingTemplate messagingTemplate){
+        this.messagingTemplate = messagingTemplate;
+    }
+
+
 
     /**
      * Permite a conexao RMI com o search model
@@ -64,19 +78,24 @@ public class Controllers {
      *
      */
     // url/teste/url=texto
-    @GetMapping("/admin")
-    private void admin(){
+    @GetMapping("/administration")
+    private String admin(){
+        return "administration";
+    }
 
-        if (searchModuleIF != null){
-            try{
-                System.out.println(searchModuleIF.admin());
-            } catch (Exception e){
-                System.out.println("Erro");
-            }
-        } else {
-            System.out.println("UPS");
+    @Scheduled(fixedDelay = 500)
+    @MessageMapping("/admin") // Rota para receber a solicitação do cliente
+    public void handleAdminRequest() {
+
+        try {
+            String info = searchModuleIF.admin();
+            messagingTemplate.convertAndSend("/topic/info", info);
+        } catch (Exception e){
+            System.out.println("ERRO!");
         }
     }
+
+
 
     /**
      *
@@ -269,33 +288,50 @@ public class Controllers {
      *
      * @param user autor
      */
-    @GetMapping("/top_user")
-    private void hacker_pesquisa_por_autor(@RequestParam(name="user", required = true) String user){
+    @Async
+    public void hacker_pesquisa_por_autor(String user){
         // url/teste/palavra=a%20b%20c
 
-        // Site das top stories
-        String str = "https://hacker-news.firebaseio.com/v0/topstories.json";
+        if (user != null){
+            // Site das top stories
+            String str = "https://hacker-news.firebaseio.com/v0/topstories.json";
 
-        // Download dos ids das top stories
-        RestTemplate restTemplate = new RestTemplate();
-        List<Integer> hacker = restTemplate.getForObject(str , List.class);
+            // Download dos ids das top stories
+            RestTemplate restTemplate = new RestTemplate();
+            List<Integer> hacker = restTemplate.getForObject(str , List.class);
 
-        if (hacker == null) return;
+            if (hacker == null) return;
 
-        // Percorremos todos os ids e verificamos os seus autores
-        List<String> urls = new ArrayList<>();
-        for (Integer i: hacker) {
-            RestTemplate rest_2 = new RestTemplate();
-            HackerNewsItemRecord hackerNewsItemRecord = rest_2.getForObject("https://hacker-news.firebaseio.com/v0/item/" + i + ".json", HackerNewsItemRecord.class);
+            // Percorremos todos os ids e verificamos os seus autores
+            List<String> urls = new ArrayList<>();
+            for (Integer i: hacker) {
+                RestTemplate rest_2 = new RestTemplate();
+                HackerNewsItemRecord hackerNewsItemRecord = rest_2.getForObject("https://hacker-news.firebaseio.com/v0/item/" + i + ".json", HackerNewsItemRecord.class);
 
-            if (hackerNewsItemRecord == null) continue;
+                if (hackerNewsItemRecord == null) continue;
 
-            // Verificamos se o autor e o correto
-            if (!hackerNewsItemRecord.by().equals(user)) {
-                indexa_url_aux(hackerNewsItemRecord.url());
+                // Verificamos se o autor e o correto
+                if (!hackerNewsItemRecord.by().equals(user)) {
+                    indexa_url_aux(hackerNewsItemRecord.url());
+                }
             }
         }
     }
+
+    /**
+     * Liga-se ao hackernews e indexa os urls das estorias do autor fornecido como
+     * parametro
+     * @param user o autor das estorias a indexar
+     * @return a vista de /top_user
+     */
+    @GetMapping("/top_user")
+    private String hacker_news_author(@RequestParam(name="user", required = false) String user){
+
+        hacker_pesquisa_por_autor(user);
+
+        return "top_user";
+    }
+
 
     /**
      * Liga-se ao hackerNews e procura pelas "top stories" que contenham as palavras desejadas.
@@ -339,6 +375,8 @@ public class Controllers {
             }
         }
     }
+
+
 
     /**
      * Funcao auxiliar que recebe um url e indexa o.

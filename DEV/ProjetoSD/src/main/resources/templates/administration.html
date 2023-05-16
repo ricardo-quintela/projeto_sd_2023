@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+    <link rel="stylesheet" type="text/css" href="global.css">
+    <link rel="stylesheet" type="text/css" href="administration.css">
+
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js%22%3E%3C"></script>
+
+
+    <script src="admin_app.js"></script>
+    <title>Googol</title>
+</head>
+<body onload="connect()">
+
+<script th:inline="javascript">
+    var popup = [[${popup}]];
+    if (popup) {
+        alert(popup);
+    }
+</script>
+
+<div class="main_container">
+    <h1 class="title">Googol</h1>
+    <h1 class="subtitle">Administração</h1>
+</div>
+
+
+<input type="checkbox" name="" id="openmenu">
+
+<div class="menu">
+
+    <label for="openmenu">
+        <div id="box">
+            <span class="bars"></span>
+            <span class="bars"></span>
+            <span class="bars"></span>
+        </div>
+    </label>
+
+    <a href="/"><h1>Googol</h1></a>
+
+    <div class="items">
+
+        <a href="/">Pesquisar</a>
+        <a href="/index_url">Indexar URL</a>
+        <a href="/search_url">Pesquisa URL</a>
+        <a href="/login">Login</a>
+        <a href="/registo">Registo</a>
+        <a href="/logout">Logout</a>
+
+    </div>
+
+</div>
+
+<div class="components">
+
+    <table id="barrels-state" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Barrels</th>
+        </tr>
+        </thead>
+        <tbody id="barrels">
+        </tbody>
+    </table>
+
+    <table id="downloaders-state" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Downloaders</th>
+        </tr>
+        </thead>
+        <tbody id="downloaders">
+        </tbody>
+    </table>
+
+    <table id="searches-state" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Pesquisas mais frequentes</th>
+        </tr>
+        </thead>
+        <tbody id="searches">
+        </tbody>
+    </table>
+
+
+</div>
+
+
+
+
+</body>
+</html>
