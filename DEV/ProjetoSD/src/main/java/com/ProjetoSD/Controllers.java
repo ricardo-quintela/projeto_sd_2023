@@ -30,6 +30,7 @@ public class Controllers {
 
     private static final Logger logger = LoggerFactory.getLogger(Controllers.class);
     private static SearchResponse searchModuleIF = null;
+    private boolean logado;
 
     /**
      * Permite a conexao RMI com o search model
@@ -50,6 +51,7 @@ public class Controllers {
                 e.printStackTrace();
             }
         }
+        this.logado = false;
     }
 
 
@@ -174,7 +176,24 @@ public class Controllers {
         return "search_results";
     }
 
+    @GetMapping("/login")
+    private String login(@RequestParam(name="name", required = false) String name, @RequestParam(name="password", required = false) String password){
 
+        if (name != null && password != null && searchModuleIF != null){
+            try{
+
+                this.logado = searchModuleIF.login(name, password);
+                System.out.println("Utilizador: " + name + " Logado com sucesso = " + this.logado);
+
+            } catch (Exception e){
+                System.out.println("Erro");
+            }
+        } else {
+            return "login";
+        }
+
+        return "index";
+    }
 
     /**
      * Procura pelas top stories escritas pelo autor pedido.
@@ -208,9 +227,6 @@ public class Controllers {
             }
         }
     }
-
-
-
 
     /**
      * Liga-se ao hackerNews e procura pelas "top stories" que contenham as palavras desejadas.
