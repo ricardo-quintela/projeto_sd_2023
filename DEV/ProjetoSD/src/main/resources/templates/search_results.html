@@ -56,7 +56,7 @@
 
 <div class="search-results-container">
 
-    <ul>
+    <ul th:if="${results.size() > 0}">
 
         <li th:each="result, iStat : ${results}">
 
@@ -71,6 +71,17 @@
         </li>
 
     </ul>
+
+    <p th:unless="${results.size() > 0}">Não foram encontrados resultados</p>
+
+</div>
+
+
+<div class="page-select">
+
+
+    <a th:if="${page > 1}" th:href="@{/search_words(palavra=${searched_string}, is_hacker_news=${is_hacker_news}, page=${page}-1)}">Anterior</a>
+    <a th:href="@{/search_words(palavra=${searched_string}, is_hacker_news=${is_hacker_news}, page=${page}+1)}">Seguinte</a>
 
 </div>
 

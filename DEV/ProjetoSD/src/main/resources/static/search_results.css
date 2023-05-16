@@ -68,6 +68,13 @@
     list-style: none;
 }
 
+.search-results-container p{
+    font-family: "Roboto";
+    color: #000000;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
 .search-result{
     display: flex;
     align-items: flex-start;

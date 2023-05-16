@@ -73,6 +73,7 @@ body{
     background: linear-gradient(to right, #07b8fe, #6878ff);
     width: 200px;
     height: 100%;
+    top: 0;
     position: fixed;
     transform: translateX(-100%);
     transition: 0.3s ease;
