@@ -195,6 +195,25 @@ public class Controllers {
         return "index";
     }
 
+    @GetMapping("/registo")
+    private String registo(@RequestParam(name="name", required = false) String name, @RequestParam(name="password", required = false) String password){
+
+        if (name != null && password != null && searchModuleIF != null){
+            try{
+
+                searchModuleIF.register(name, password);
+                System.out.println("Utilizador: " + name + " registado com sucesso");
+
+            } catch (Exception e){
+                System.out.println("Erro");
+            }
+        } else {
+            return "registo";
+        }
+
+        return "index";
+    }
+
     /**
      * Procura pelas top stories escritas pelo autor pedido.
      *
