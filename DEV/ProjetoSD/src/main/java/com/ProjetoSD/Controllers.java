@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.web.servlet.view.RedirectView;
 import searchEngine.search.SearchResponse;
 
+import java.net.http.HttpClient;
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -50,8 +52,8 @@ public class Controllers {
 
 
     @GetMapping("/")
-    private String home(){
-        return "home/index";
+    private RedirectView home(){
+        return new RedirectView("/search_words");
     }
 
     /**
@@ -78,18 +80,20 @@ public class Controllers {
      */
     // url/teste/url=texto
     @GetMapping("/search_url")
-    private void search_url(@RequestParam(name="url", required = true) String url){
+    private String search_url(@RequestParam(name="url", required = false) String url){
 
-        if (searchModuleIF != null){
+        if (url != null && searchModuleIF != null){
             try{
                 System.out.println(url);
                 searchModuleIF.searchUrl("Cliente", url);
+
             } catch (Exception e){
                 System.out.println("Erro");
             }
         } else {
             System.out.println("UPS");
         }
+        return "home/index";
     }
 
     /**
@@ -114,21 +118,25 @@ public class Controllers {
      * @param palavra String com todas as palavras separadas por espacos
      */
     // url/teste/palavra=a%20b%20c&is_hacker_news=true
-    @GetMapping("/search_palavras")
-    private void pesquisa(@RequestParam(name="palavra", required = true) String palavra, @RequestParam(name="is_hacker_news", required = true) Boolean isHackerNews){
+    @GetMapping("/search_words")
+    private String pesquisa(@RequestParam(name="palavra", required = false) String palavra, @RequestParam(name="is_hacker_news", required = false) Boolean is_hacker_news){
 
-        if (searchModuleIF != null){
+        if (palavra != null && searchModuleIF != null){
 
             // Separamos em palavras simples, exceto a ultima que dira informacao extra
             String[] palavras = palavra.split(" ", 2);
-            CopyOnWriteArrayList<String> array = new CopyOnWriteArrayList<>(Arrays.asList(palavras).subList(0, palavras.length - 1));
+            CopyOnWriteArrayList<String> array = new CopyOnWriteArrayList<>(Arrays.asList(palavras).subList(0, palavras.length));
+
+            for (String alguma_coisa: array) {
+                System.out.println(alguma_coisa);
+            }
 
             try{
                 // Fazemos a pesquisa das palavras
-                searchModuleIF.execSearch("Cliente", array);
+                System.out.println(searchModuleIF.execSearch("Cliente", array));
 
                 // Se a ultima palavra assim disser, procuramos tambem no hacker
-                if (palavras[palavras.length - 1].equals("true")){
+                if (is_hacker_news){
                     hacker_pesquisa_por_palavra(array);
                 }
 
@@ -138,6 +146,8 @@ public class Controllers {
         } else {
             System.out.println("UPS");
         }
+
+        return "home/index";
     }
 
 
