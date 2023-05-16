@@ -183,7 +183,7 @@ public class Controllers {
     }
 
     @GetMapping("/login")
-    private String login(@RequestParam(name="name", required = false) String name, @RequestParam(name="password", required = false) String password){
+    private String login(@RequestParam(name="name", required = false) String name, @RequestParam(name="password", required = false) String password, Model model){
 
         if (name != null && password != null && searchModuleIF != null){
             try{
@@ -198,17 +198,29 @@ public class Controllers {
             return "login";
         }
 
+        if (this.logado){
+            model.addAttribute("popup", "Logado");
+        } else {
+            model.addAttribute("popup", "Erro no login");
+            return "login";
+        }
+
         return "index";
     }
 
     @GetMapping("/registo")
-    private String registo(@RequestParam(name="name", required = false) String name, @RequestParam(name="password", required = false) String password){
+    private String registo(@RequestParam(name="name", required = false) String name, @RequestParam(name="password", required = false) String password, Model model){
 
         if (name != null && password != null && searchModuleIF != null){
             try{
 
-                searchModuleIF.register(name, password);
-                System.out.println("Utilizador: " + name + " registado com sucesso");
+                if (searchModuleIF.register(name, password)){
+                    model.addAttribute("popup", "Registado");
+                }
+                else {
+                    model.addAttribute("popup", "Erro no login");
+                    return "registo";
+                }
 
             } catch (Exception e){
                 System.out.println("Erro");

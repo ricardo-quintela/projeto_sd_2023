@@ -10,6 +10,13 @@
 </head>
 <body>
 
+    <script th:inline="javascript">
+        var popup = [[${popup}]];
+        if (popup) {
+            alert(popup);
+        }
+    </script>
+
 <div class="search_container">
 
     <div class="container">
