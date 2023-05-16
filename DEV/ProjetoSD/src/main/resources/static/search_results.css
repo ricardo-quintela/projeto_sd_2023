@@ -62,7 +62,7 @@
     justify-content: center;
     align-items: center;
     position: relative;
-    text-align: center;
+    text-align: left;
     z-index: 1;
 }
 
@@ -72,6 +72,8 @@
 
 .search-results-container ul{
     list-style: none;
+    word-wrap: break-word;
+    width: 80%;
 }
 
 .search-results-container p{

@@ -94,16 +94,24 @@ public class Controllers {
                     return "index";
                 }
 
-                System.out.println(searchModuleIF.searchUrl("Cliente", url));
+                CopyOnWriteArrayList<String> resultados = searchModuleIF.searchUrl("Cliente", url);
+                List<Results> urls_recebidos = new ArrayList<>();
+
+                for (String result: resultados) {
+                    urls_recebidos.add(new Results("", "", result));
+                }
+
+                model.addAttribute("results", urls_recebidos);
+                model.addAttribute("searched_url", url);
 
             } catch (Exception e){
                 System.out.println("Erro");
             }
         } else {
-            return "search_url";
+            return "search_url_home";
         }
 
-        return "index";
+        return "search_url";
     }
 
     /**
