@@ -10,6 +10,13 @@
 </head>
 <body>
 
+    <script th:inline="javascript">
+        var popup = [[${popup}]];
+        if (popup) {
+            alert(popup);
+        }
+    </script>
+
     <div class="main_container">
 
                 <h1 class="title">Googol</h1>
@@ -44,8 +51,10 @@
 
             <a href="/">Pesquisar</a>
             <a href="/index_url">Indexar URL</a>
+            <a href="/search_url">Pesquisa URL</a>
             <a href="/login">Login</a>
             <a href="/registo">Registo</a>
+            <a href="/logout">Logout</a>
 
         </div>
 
