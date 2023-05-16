@@ -49,3 +49,46 @@
     color: #a5a5a5;
     transition: 0.3s;
 }
+
+
+.search-results-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    text-align: center;
+    z-index: 1;
+}
+
+.search-results-container a{
+    text-decoration: none;
+}
+
+.search-results-container ul{
+    list-style: none;
+}
+
+.search-result{
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    height: fit-content;
+    width: fit-content;
+    margin-bottom: 10px;
+    border-bottom: #000000;
+    border-width: 2px;
+}
+
+.search-result h1{
+    font-family: "Roboto";
+    color: #0aa3e5;
+    font-size: 25px;
+    margin-bottom: 0;
+}
+
+.search-result p{
+    font-family: "Roboto";
+    color: #000000;
+    margin-bottom: 0;
+    margin-top: 0;
+}

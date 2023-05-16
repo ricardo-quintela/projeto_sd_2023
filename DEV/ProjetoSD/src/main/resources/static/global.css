@@ -72,12 +72,11 @@ body{
 
     background: linear-gradient(to right, #07b8fe, #6878ff);
     width: 200px;
-    top: 0;
     height: 100%;
-    position: absolute;
+    position: fixed;
     transform: translateX(-100%);
     transition: 0.3s ease;
-    animation-fill-mode: both;
+    z-index: 2;
 
 }
 

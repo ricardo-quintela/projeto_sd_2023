@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.servlet.view.RedirectView;
 import searchEngine.search.SearchResponse;
 
+import java.nio.charset.StandardCharsets;
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -94,7 +95,7 @@ public class Controllers {
         } else {
             System.out.println("UPS");
         }
-        return "home/index";
+        return "index";
     }
 
     /**
@@ -110,7 +111,7 @@ public class Controllers {
             indexa_url_aux(url);
         }
 
-        return "index_url/index_url";
+        return "index_url";
     }
 
     /**
@@ -139,12 +140,12 @@ public class Controllers {
                 CopyOnWriteArrayList<Results> results = new CopyOnWriteArrayList<>();
                 for (String str: resultados){
                     String[] parts = str.split("\\|");
-                    String url = parts[0].trim().replace("Url: ", "");
-                    String titulo = parts[1].trim().replace("Titulo: ", "");
-                    String texto = parts[2].trim().replace("Texto: ", "");
+                    String url = new String(parts[0].trim().replace("Url: ", "").getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+                    String titulo = new String(parts[1].trim().replace("Titulo: ", "").getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+                    String texto = new String(parts[2].trim().replace("Texto: ", "").getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
                     results.add(new Results(titulo, texto, url));
                 }
-                model.addAttribute("result", results);
+                model.addAttribute("results", results);
 
                 // Se a ultima palavra assim disser, procuramos tambem no hacker
                 if (is_hacker_news != null && is_hacker_news.equals("true")){
@@ -159,7 +160,7 @@ public class Controllers {
             System.out.println("UPS");
         }
 
-        return "search_results/search_results";
+        return "search_results";
     }
 
 
