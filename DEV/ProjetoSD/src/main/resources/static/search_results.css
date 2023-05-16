@@ -18,12 +18,18 @@
     background-clip: text;
 }
 
+
 .container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+}
+
+.container input[type=checkbox]{
+    transform: scale(2);
+    margin: 10px;
 }
 
 .search_container #query_input{
@@ -99,3 +105,23 @@
     margin-bottom: 0;
     margin-top: 0;
 }
+
+.page-select{
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.page-select a{
+    font-family: "Roboto";
+    color: #0aa3e5;
+    font-size: 24px;
+    margin: 30px;
+    text-decoration: none;
+
+}
+.page-select a:hover{
+    text-decoration: underline;
+    text-decoration-color: #0aa3e5;
+}
+

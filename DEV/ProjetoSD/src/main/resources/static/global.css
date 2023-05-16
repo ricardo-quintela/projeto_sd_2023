@@ -63,6 +63,11 @@ body{
     transition: 0.3s;
 }
 
+.main_container input[type=checkbox]{
+    transform: scale(2);
+    margin: 10px;
+}
+
 
 
 
