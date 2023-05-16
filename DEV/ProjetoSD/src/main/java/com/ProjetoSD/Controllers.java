@@ -1,5 +1,6 @@
 package com.ProjetoSD;
 
+import com.ProjetoSD.data.Results;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,11 +9,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.ui.Model;
 
 import org.springframework.web.servlet.view.RedirectView;
 import searchEngine.search.SearchResponse;
 
-import java.net.http.HttpClient;
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -119,7 +120,7 @@ public class Controllers {
      */
     // url/teste/palavra=a%20b%20c&is_hacker_news=true
     @GetMapping("/search_words")
-    private String pesquisa(@RequestParam(name="palavra", required = false) String palavra, @RequestParam(name="is_hacker_news", required = false) Boolean is_hacker_news){
+    private String pesquisa(@RequestParam(name="palavra", required = false) String palavra, @RequestParam(name="is_hacker_news", required = false) Boolean is_hacker_news, Model model){
 
         if (palavra != null && searchModuleIF != null){
 
@@ -133,7 +134,17 @@ public class Controllers {
 
             try{
                 // Fazemos a pesquisa das palavras
-                System.out.println(searchModuleIF.execSearch("Cliente", array));
+                CopyOnWriteArrayList<String> resultados = searchModuleIF.execSearch("Cliente", array);
+
+                CopyOnWriteArrayList<Results> results = new CopyOnWriteArrayList<>();
+                for (String str: resultados){
+                    String[] parts = str.split("\\|");
+                    String url = parts[0].trim().replace("Url: ", "");
+                    String titulo = parts[1].trim().replace("Titulo: ", "");
+                    String texto = parts[2].trim().replace("Texto: ", "");
+                    results.add(new Results(titulo, texto, url));
+                }
+                model.addAttribute("result", results);
 
                 // Se a ultima palavra assim disser, procuramos tambem no hacker
                 if (is_hacker_news){
