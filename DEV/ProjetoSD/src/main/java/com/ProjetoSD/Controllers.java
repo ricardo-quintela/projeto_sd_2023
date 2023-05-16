@@ -84,19 +84,25 @@ public class Controllers {
      */
     // url/teste/url=texto
     @GetMapping("/search_url")
-    private String search_url(@RequestParam(name="url", required = false) String url){
+    private String search_url(@RequestParam(name="url", required = false) String url, Model model){
 
         if (url != null && searchModuleIF != null){
             try{
-                System.out.println(url);
-                searchModuleIF.searchUrl("Cliente", url);
+
+                if (!this.logado){
+                    model.addAttribute("popup", "Precisas de estar logado para esta tarefa!");
+                    return "index";
+                }
+
+                System.out.println(searchModuleIF.searchUrl("Cliente", url));
 
             } catch (Exception e){
                 System.out.println("Erro");
             }
         } else {
-            System.out.println("UPS");
+            return "search_url";
         }
+
         return "index";
     }
 
@@ -182,8 +188,26 @@ public class Controllers {
         return "search_results";
     }
 
+    @GetMapping("/logout")
+    private String logout(Model model){
+
+        if (this.logado){
+            model.addAttribute("popup", "Deslogado com sucesso.");
+            this.logado = false;
+        } else {
+            model.addAttribute("popup", "Não te encontras logado.");
+        }
+
+        return "index";
+    }
+
     @GetMapping("/login")
     private String login(@RequestParam(name="name", required = false) String name, @RequestParam(name="password", required = false) String password, Model model){
+
+        if (this.logado){
+            model.addAttribute("popup", "Já te encontras logado!");
+            return "index";
+        }
 
         if (name != null && password != null && searchModuleIF != null){
             try{
