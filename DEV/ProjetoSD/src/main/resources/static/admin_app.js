@@ -11,14 +11,22 @@ function connect() {
     });
 }
 
+
+function disconnect(){
+    if (stompClient != null){
+        stompClient.disconnect();
+    }
+}
+
+
 function showMessage(message) {
 
     var lines = message.split("\n");
 
-    $("#barrels").html("");
+    $("#info").html("");
 
     for (let i = 0; i < lines.length; i++){
-        $("#barrels").append("<tr><td>" + lines[i] + "</td></tr>");
+        $("#info").append("<p>" + lines[i] + "</p>");
     }
 
 }

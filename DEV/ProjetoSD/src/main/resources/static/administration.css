@@ -1,6 +1,37 @@
-.components{
-    justify-content: center;
-    text-align: center;
-    align-items: center;
+.search_container h1{
+    margin-bottom: 0;
+}
 
+.search_container .admin-subtitle{
+    background: linear-gradient(to right, #07b8fe, #6878ff);
+    font-family: "Roboto";
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+
+    margin-top: 0;
+
+    background: linear-gradient(to right, #07b8fe, #6878ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.components{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    width: fit-content;
+    margin: 0 auto;
+    margin-top: 10%;
+
+    border-color: #07b8fe;
+    border-style: outset;
+}
+
+.components p {
+    font-family: "Roboto";
+    font-weight: lighter;
+    padding: 0px 10px;
 }

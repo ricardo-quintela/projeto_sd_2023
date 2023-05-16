@@ -46,8 +46,9 @@ public class Controllers {
 
 
 
+
     /**
-     * Permite a conexao RMI com o search model
+     * Permite a conexao RMI com o search module
      */
     @Bean
     @Autowired
@@ -86,6 +87,8 @@ public class Controllers {
     @Scheduled(fixedDelay = 500)
     @MessageMapping("/admin") // Rota para receber a solicitação do cliente
     public void handleAdminRequest() {
+
+        System.out.println("OLA");
 
         try {
             String info = searchModuleIF.admin();
