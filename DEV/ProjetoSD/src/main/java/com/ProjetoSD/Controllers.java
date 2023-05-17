@@ -22,6 +22,7 @@ import searchEngine.search.SearchResponse;
 import java.nio.charset.StandardCharsets;
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
@@ -98,13 +99,11 @@ public class Controllers {
     @MessageMapping("/admin") // Rota para receber a solicitação do cliente
     public void handleAdminRequest() {
 
-        System.out.println("OLA");
-
         try {
             String info = searchModuleIF.admin();
             messagingTemplate.convertAndSend("/topic/info", info);
-        } catch (Exception e){
-            System.out.println("ERRO!");
+        } catch (RemoteException e){
+            System.out.println("Erro: Ocorreu um erro de RMI entre o SearchModule e o WebServer!");
         }
     }
 
@@ -118,7 +117,7 @@ public class Controllers {
     @GetMapping("/search_url")
     private String search_url(@RequestParam(name="url", required = false) String url, Model model){
 
-        if (url != null && searchModuleIF != null){
+        if (url != null && searchModuleIF != null && !url.equals("")){
             try{
 
                 if (!this.logado){
@@ -136,8 +135,8 @@ public class Controllers {
                 model.addAttribute("results", urls_recebidos);
                 model.addAttribute("searched_url", url);
 
-            } catch (Exception e){
-                System.out.println("Erro");
+            } catch (RemoteException e){
+                System.out.println("Ocorreu um erro de RMI entre o SearchModule e o WebServer!");
             }
         } else {
             return "search_url_home";
@@ -155,7 +154,7 @@ public class Controllers {
     @GetMapping("/index_url")
     private String indexa_url(@RequestParam(name="url", required = false) String url){
 
-        if (url != null){
+        if (url != null && !url.equals("")){
             indexa_url_aux(url);
         }
 
@@ -171,7 +170,7 @@ public class Controllers {
     @GetMapping("/search_words")
     private String pesquisa(@RequestParam(name="palavra", required = false) String palavra, @RequestParam(name="is_hacker_news", required = true, defaultValue = "0") String is_hacker_news, @RequestParam(name="page", required = true, defaultValue = "1") int page, Model model){
 
-        if (palavra != null && searchModuleIF != null){
+        if (palavra != null && searchModuleIF != null && !palavra.equals("")){
 
             // Separamos em palavras simples, exceto a ultima que dira informacao extra
             String[] palavras = palavra.split(" ", 2);
@@ -214,15 +213,15 @@ public class Controllers {
 
                 // Se a ultima palavra assim disser, procuramos tambem no hacker
                 if (is_hacker_news != null && is_hacker_news.equals("true")){
-                    System.out.println("OLA EU SOU FIXE");
                     hacker_pesquisa_por_palavra(array);
                 }
 
-            } catch (Exception e){
-                e.printStackTrace();
+            } catch (RemoteException e){
+                System.out.println("Ocorreu um erro de RMI entre o SearchModule e o WebServer!");
             }
         } else {
-            System.out.println("UPS");
+            System.out.println("Erro: A palavra passada como parametro esta vazia!");
+            return "index";
         }
 
         return "search_results";
@@ -250,14 +249,21 @@ public class Controllers {
         }
 
         if (name != null && password != null && searchModuleIF != null){
-            try{
 
-                this.logado = searchModuleIF.login(name, password);
-                System.out.println("Utilizador: " + name + " Logado com sucesso = " + this.logado);
+            if (!password.equals("") && !name.equals("")){
+                try{
 
-            } catch (Exception e){
-                System.out.println("Erro");
+                    this.logado = searchModuleIF.login(name, password);
+                    System.out.println("Utilizador: " + name + " Logado com sucesso = " + this.logado);
+
+                } catch (RemoteException e){
+                    System.out.println("Ocorreu um erro de RMI entre o SearchModule e o WebServer!");
+                }
+            } else {
+                model.addAttribute("popup", "Erro no login");
+                return "login";
             }
+
         } else {
             return "login";
         }
@@ -276,19 +282,27 @@ public class Controllers {
     private String registo(@RequestParam(name="name", required = false) String name, @RequestParam(name="password", required = false) String password, Model model){
 
         if (name != null && password != null && searchModuleIF != null){
-            try{
 
-                if (searchModuleIF.register(name, password)){
-                    model.addAttribute("popup", "Registado");
-                }
-                else {
-                    model.addAttribute("popup", "Erro no login");
-                    return "registo";
-                }
+            if (!password.equals("") && !name.equals("")){
+                try{
 
-            } catch (Exception e){
-                System.out.println("Erro");
+                    if (searchModuleIF.register(name, password)){
+                        model.addAttribute("popup", "Registado");
+                    }
+                    else {
+                        model.addAttribute("popup", "Erro no registo");
+                        return "registo";
+                    }
+
+                } catch (RemoteException e){
+                    System.out.println("Ocorreu um erro de RMI entre o SearchModule e o WebServer!");
+                }
+            } else {
+                model.addAttribute("popup", "Erro no registo");
+                return "registo";
             }
+
+
         } else {
             return "registo";
         }
@@ -340,7 +354,9 @@ public class Controllers {
     @GetMapping("/top_user")
     private String hacker_news_author(@RequestParam(name="user", required = false) String user){
 
-        hacker_pesquisa_por_autor(user);
+        if (user != null && !user.equals("")){
+            hacker_pesquisa_por_autor(user);
+        }
 
         return "top_user";
     }
@@ -353,7 +369,7 @@ public class Controllers {
      * @param array CopyOnWriteArrayList<String> com as palavras da pesquisa
      */
     @Async
-    private void hacker_pesquisa_por_palavra(CopyOnWriteArrayList<String> array){
+    public void hacker_pesquisa_por_palavra(CopyOnWriteArrayList<String> array){
 
         // Ligacao ao site e vars necessarias
         String str = "https://hacker-news.firebaseio.com/v0/topstories.json";
@@ -401,11 +417,11 @@ public class Controllers {
         if (searchModuleIF != null && url != null){
             try{
                 searchModuleIF.execURL(url);
-            } catch (Exception e){
-                System.out.println("Erro");
+            } catch (RemoteException e){
+                System.out.println("Ocorreu um erro de RMI entre o SearchModule e o WebServer!");
             }
         } else {
-            System.out.println("UPS");
+            System.out.println("Erro: O URL fornecido esta vazio!");
         }
     }
 
