@@ -514,15 +514,17 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     /**
      * Tenta criar o registo RMI próprio do {@code SearchModule}
      * 
+     * @param host     o endereço IP do registo
      * @param port     o porto do registo
      * @param endpoint o endpoint em que a instância de {@code SearchModule} vai ser registada
      * @param barrel   o {@code SearchModule} que se quer ligar
      */
-    public boolean register(int port, String endpoint) {
+    public boolean register(String host, int port, String endpoint) {
         Registry registry;
 
         // tentar criar o registo
         try {
+            System.setProperty("java.rmi.server.hostname", InetAddress.getLocalHost().getHostAddress());
             registry = LocateRegistry.createRegistry(port);
             log.info(toString(), "Registo criado em 'localhost:" + port);
         } catch (RemoteException re) { // caso nao consiga criar sai com erro
