@@ -17,13 +17,18 @@
     background-clip: text;
 }
 
-.components{
+.master-components{
     display: flex;
     justify-content: center;
+    text-align: center;
+}
+
+.components{
+    display: flex;
     flex-direction: column;
     text-align: center;
     width: fit-content;
-    margin: 0 auto;
+    margin: 10px;
     margin-top: 10%;
 
     border-color: #07b8fe;
@@ -34,4 +39,15 @@
     font-family: "Roboto";
     font-weight: lighter;
     padding: 0px 10px;
+}
+
+
+.components h1{
+    padding: 10px;
+    font-family: "Roboto";
+    background: linear-gradient(to right, #07b8fe, #6878ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
 }

@@ -72,9 +72,9 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     }
 
 
-    public Url removeURL(String downloader, String endpoint, int porta) throws RemoteException {
+    public Url removeURL(String downloader, String endpoint, int porta, String ip) throws RemoteException {
         try {
-            String str = "IP: /" + endpoint + ":" + porta;
+            String str = "IP:" + ip + ":" + porta + "/" + endpoint;
             this.downloaders.add(str);
             this.numDownloaders ++;
             Url url = urls.take();

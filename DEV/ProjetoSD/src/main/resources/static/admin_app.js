@@ -40,25 +40,26 @@ function showMessage(message) {
         }
     }
 
-    $("#info").html("");
+    $("#barrels").html("<h1>Barrels</h1>");
+    $("#downloaders").html("<h1>Downloaders</h1>");
+    $("#search-results").html("<h1>Pesquisas mais Frequentes</h1>");
 
-    $("#info").append("<p> BARRELS </p>");
     for (let i = 0; i < barrels.length; i++) {
-        if (barrels[i][barrels[i].length - 1] % 2 === 0){
-            $("#info").append("<p>" + barrels[i] + "- Partição: A-M</p>");
+        const host = barrels[i].split('/');
+
+        if (host[0][host[0].length - 1] % 2 === 0){
+            $("#barrels").append("<p>" + barrels[i] + "- Partição: A-M</p>");
         } else {
-            $("#info").append("<p>" + barrels[i] + "- Partição: N-Z</p>");
+            $("#barrels").append("<p>" + barrels[i] + "- Partição: N-Z</p>");
         }
         // Faça o que desejar com cada elemento do array 'barrels'
     }
-    $("#info").append("<p> DOWNLOADERS </p>");
     for (let i = 0; i < downloaders.length; i++) {
-        $("#info").append("<p>" + downloaders[i] + "</p>");
+        $("#downloaders").append("<p>" + downloaders[i] + "</p>");
         // Faça o que desejar com cada elemento do array 'barrels'
     }
-    $("#info").append("<p> PESQUISAS </p>");
     for (let i = 0; i < pesquisas.length; i++) {
-        $("#info").append("<p>" + pesquisas[i] + "</p>");
+        $("#search-results").append("<p>" + pesquisas[i] + "</p>");
         // Faça o que desejar com cada elemento do array 'barrels'
     }
 }

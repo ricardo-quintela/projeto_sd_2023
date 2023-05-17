@@ -294,7 +294,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
         String downloadersAtivos = "";
         for (int i = 0; i < this.barrel_ports.size(); i++) {
             if(this.ativos.get(i) == 1) {
-                barrelsAtivos += "IP: /" + this.barrel_endpoints.get(i) + ":" + this.barrel_ports.get(i) + "\n";
+                barrelsAtivos += "IP:" + this.barrel_hosts.get(i) + ":" + this.barrel_ports.get(i) + "/" + this.barrel_endpoints.get(i) + "\n";
             }
         }
         for (String string : downloaders) {

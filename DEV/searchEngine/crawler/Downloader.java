@@ -407,7 +407,13 @@ public class Downloader {
                 // extrair um URL da fila (BLOQUEANTE)
                 this.log.info(toString(),
                         "Procurando outro URL em 'localhost:" + this.queuePort + "/" + this.queueEndpoint + "'...");
-                url = queue.removeURL(toString(), this.name, 123);
+
+                try{
+                    url = queue.removeURL(toString(), this.name, 123, InetAddress.getLocalHost().getHostAddress());
+                }
+                catch (UnknownHostException e){
+                    System.out.println("Erro: Ip nao reconhecido!");
+                }
                 this.log.info(toString(), "Recebido '" + url + "'. A extrair...");
 
                 // analisar o website em URL e extrair as palavras para o indice
