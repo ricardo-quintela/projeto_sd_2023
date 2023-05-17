@@ -9,6 +9,9 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -514,12 +517,11 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
     /**
      * Tenta criar o registo RMI próprio do {@code SearchModule}
      * 
-     * @param host     o endereço IP do registo
      * @param port     o porto do registo
      * @param endpoint o endpoint em que a instância de {@code SearchModule} vai ser registada
      * @param barrel   o {@code SearchModule} que se quer ligar
      */
-    public boolean register(String host, int port, String endpoint) {
+    public boolean register(int port, String endpoint) {
         Registry registry;
 
         // tentar criar o registo
@@ -527,6 +529,10 @@ public class SearchModule extends UnicastRemoteObject implements SearchResponse{
             System.setProperty("java.rmi.server.hostname", InetAddress.getLocalHost().getHostAddress());
             registry = LocateRegistry.createRegistry(port);
             log.info(toString(), "Registo criado em 'localhost:" + port);
+        } catch (UnknownHostException e){
+            log.error(toString(), "Nao foi possivel obter o endereco IP da maquina!");
+          return false;
+
         } catch (RemoteException re) { // caso nao consiga criar sai com erro
             
             log.error(toString(), "Nao foi possivel criar o registo em 'localhost:" + port + "/" + endpoint + "'");

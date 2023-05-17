@@ -352,6 +352,7 @@ public class Controllers {
      *
      * @param array CopyOnWriteArrayList<String> com as palavras da pesquisa
      */
+    @Async
     private void hacker_pesquisa_por_palavra(CopyOnWriteArrayList<String> array){
 
         // Ligacao ao site e vars necessarias
