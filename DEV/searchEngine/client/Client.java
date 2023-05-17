@@ -483,7 +483,7 @@ public class Client{
             try {
     
                 // ligar ao server registado no rmiEndpoint fornecido
-                searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(client.rmiPortSM.get(index)).lookup(client.rmiEndpointSM.get(index));
+                searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(client.rmiHostSM.get(index), client.rmiPortSM.get(index)).lookup(client.rmiEndpointSM.get(index));
     
                 // menu da aplicação
                 valor = client.menu(sc, searchModuleIF, valor);
