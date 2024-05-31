@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+    <link rel="stylesheet" type="text/css" href="global.css">
+    <title>Googol</title>
+</head>
+<body>
+
+    <script th:inline="javascript">
+        var popup = [[${popup}]];
+        if (popup) {
+            alert(popup);
+        }
+    </script>
+
+    <div class="main_container">
+
+                <h1 class="title">Googol</h1>
+
+                <form action="/search_words">
+
+                    <input type="text" name="palavra" id="query_input">
+                    <input type="checkbox" name="is_hacker_news" value="true">
+                    <input type="submit" value="Pesquisar">
+
+                </form>
+
+    </div>
+
+
+    <input type="checkbox" name="" id="openmenu">
+
+    <div class="menu">
+
+        <label for="openmenu">
+            <div id="box">
+                <span class="bars"></span>
+                <span class="bars"></span>
+                <span class="bars"></span>
+            </div>
+        </label>
+
+        <a href="/"><h1>Googol</h1></a>
+
+        <div class="items">
+
+            <a href="/">Pesquisar</a>
+            <a href="/index_url">Indexar URL</a>
+            <a href="/search_url">Pesquisa URL</a>
+            <a href="/top_user">Top User</a>
+            <a href="/administration">Administração</a>
+            <a href="/login">Login</a>
+            <a href="/registo">Registo</a>
+            <a href="/logout">Logout</a>
+
+        </div>
+
+    </div>
+    
+</body>
+</html>

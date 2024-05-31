@@ -1,0 +1,156 @@
+{
+    "UrlQueue": {
+        "pos": [
+            30,
+            245
+        ],
+        "color": [
+            0,
+            255,
+            234
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "SearchModule": {
+        "pos": [
+            177,
+            70
+        ],
+        "color": [
+            255,
+            6,
+            0
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "<<SearchRequest>>": {
+        "pos": [
+            229,
+            156
+        ],
+        "color": [
+            255,
+            18,
+            0
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": "SearchModule"
+    },
+    "Barrel": {
+        "pos": [
+            44,
+            63
+        ],
+        "color": [
+            0,
+            123,
+            255
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "<<QueryIf>>": {
+        "pos": [
+            28,
+            154
+        ],
+        "color": [
+            0,
+            135,
+            255
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": "Barrel"
+    },
+    "WordIndex": {
+        "pos": [
+            500,
+            167
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "Log": {
+        "pos": [
+            439,
+            74
+        ],
+        "color": [
+            126,
+            0,
+            255
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "TextFileWorker": {
+        "pos": [
+            329,
+            254
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "Downloader": {
+        "pos": [
+            538,
+            90
+        ],
+        "color": [
+            255,
+            147,
+            0
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "Url": {
+        "pos": [
+            218,
+            251
+        ],
+        "color": [
+            0,
+            0,
+            0
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    },
+    "Client": {
+        "pos": [
+            556,
+            260
+        ],
+        "color": [
+            0,
+            255,
+            15
+        ],
+        "attributes": [],
+        "methods": [],
+        "parent": null
+    }
+}

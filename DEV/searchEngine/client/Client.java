@@ -6,33 +6,30 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import searchEngine.search.SearchResponse;
-import searchEngine.utils.Log;
 import searchEngine.fileWorker.TextFileWorker;
 
 public class Client{
     private String name;
 
+    private ArrayList<String> rmiHostSM;
     private ArrayList<String> rmiEndpointSM;
     private ArrayList<Integer> rmiPortSM;
 
     private String lastSearch;
-
-    private Log log;
 
     /**
      * Construtor por omissão da classe {@code Client}
      */
     public Client(){
         this.name = null;
+        this.rmiHostSM = new ArrayList<>();
         this.rmiEndpointSM = new ArrayList<>();
         this.rmiPortSM = new ArrayList<>();
-        this.log = new Log();
         this.lastSearch = null;
     }
 
@@ -42,16 +39,17 @@ public class Client{
      */
     public Client(String name){
         this.name = name;
+        this.rmiHostSM = new ArrayList<>();
         this.rmiEndpointSM = new ArrayList<>();
         this.rmiPortSM = new ArrayList<>();
-        this.log = new Log();
         this.lastSearch = null;
     }
 
-    public boolean searchURL(SearchResponse searchModuleIF){
+    public boolean searchURL(Scanner sc, SearchResponse searchModuleIF){
+
+        sc.nextLine();
 
         CopyOnWriteArrayList<String> response;
-        Scanner sc = new Scanner(System.in);
 
         while (true){
 
@@ -81,7 +79,6 @@ public class Client{
                 }
 
             } catch (RemoteException e) {
-                //System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
                 return false;
             }
 
@@ -110,7 +107,6 @@ public class Client{
             }
 
         } catch (RemoteException e) {
-            //System.out.println("Erro: Ocorreu um erro do servidor ao efetuar a pesquisa!");
             return false;
         }
 
@@ -122,10 +118,11 @@ public class Client{
     /**
      * Pede ao utilizador por uma string de palavras chave para pesquisar
      */
-    public boolean searchMenu(SearchResponse searchModuleIF){
+    public boolean searchMenu(Scanner sc, SearchResponse searchModuleIF){
+
+        sc.nextLine();
 
         CopyOnWriteArrayList<String> response = null;
-        Scanner sc = new Scanner(System.in);
 
         while (true){
 
@@ -189,10 +186,13 @@ public class Client{
                     page = sc.nextInt();
 
                 } catch (RemoteException e){
-                    e.printStackTrace();
+                    System.out.println("Ocorreu um erro.\n");
                     return false;
+                } catch (InputMismatchException e) {
+                    System.out.println("Deve inserir um numero.\n");
+                    sc.nextLine();
                 } catch (NumberFormatException e){
-                    System.out.print("Deve inserir um numero.");
+                    System.out.println("Deve inserir um numero.\n");
                 }
             }
 
@@ -205,9 +205,7 @@ public class Client{
     /**
      * Pede ao utilizador um URL e envia ao SearchModule para pesquisar.
      */
-    public boolean sendURL(SearchResponse searchModuleIF){
-
-        Scanner sc = new Scanner(System.in);
+    public boolean sendURL(Scanner sc, SearchResponse searchModuleIF){
 
         sc.nextLine();
 
@@ -218,7 +216,6 @@ public class Client{
                 
                 // ler uma linha do stdin
                 this.lastSearch = sc.nextLine();
-
             }
             
             // voltar atrás no menu
@@ -240,7 +237,6 @@ public class Client{
                 }
 
             } catch (RemoteException e) {
-                //System.out.println("Erro: Ocorreu um erro do servidor ao enviar o URL!");
                 return false;
             }
 
@@ -253,9 +249,9 @@ public class Client{
      * 
      * @return true em caso de login bem sucedido
      */
-    public boolean logar(SearchResponse searchModuleIF){
+    public boolean logar(Scanner sc, SearchResponse searchModuleIF){
 
-        Scanner sc = new Scanner(System.in);
+        sc.nextLine();
 
         System.out.print("Username: ");
         
@@ -288,9 +284,9 @@ public class Client{
      * 
      * @return true em caso de registo bem sucedido
      */
-    public boolean registo(SearchResponse searchModuleIF){
+    public boolean registo(Scanner sc, SearchResponse searchModuleIF){
 
-        Scanner sc = new Scanner(System.in);
+        sc.nextLine();
 
         System.out.print("Username: ");
         
@@ -320,9 +316,7 @@ public class Client{
     /**
      * Menu de utilizador
      */
-    public int menu(SearchResponse searchModuleIF, int num){
-
-        Scanner sc = new Scanner(System.in);
+    public int menu(Scanner sc, SearchResponse searchModuleIF, int num){
 
         boolean loop = true;
         while (loop){
@@ -339,14 +333,14 @@ public class Client{
 
                     // indexar um URL
                     case 1:
-                        if (!this.sendURL(searchModuleIF)){
+                        if (!this.sendURL(sc, searchModuleIF)){
                             return num;
                         }
                         break;
 
                     // pesquisar
                     case 2:
-                        if (!this.searchMenu(searchModuleIF)){
+                        if (!this.searchMenu(sc, searchModuleIF)){
                             return num;
                         }
                         break;
@@ -356,7 +350,7 @@ public class Client{
                         if (this.name != null) {
                             System.out.println("Já estás logado.");
                         }
-                        else if (this.registo(searchModuleIF)){
+                        else if (this.registo(sc, searchModuleIF)){
                             ;
                         }
                         else {
@@ -369,7 +363,7 @@ public class Client{
                         if (this.name != null) {
                             System.out.println("Já estás logado.");
                         }
-                        else if (this.logar(searchModuleIF)){
+                        else if (this.logar(sc, searchModuleIF)){
                             ;
                         }
                         else {
@@ -392,7 +386,7 @@ public class Client{
                             System.out.println("Não estás logado.");
                         }
                         else {
-                            if (!this.searchURL(searchModuleIF)){
+                            if (!this.searchURL(sc, searchModuleIF)){
                                 return num;
                             }
                         }
@@ -423,8 +417,6 @@ public class Client{
             }
 
         }
-
-        sc.close();
         return -1;
     }
 
@@ -437,27 +429,26 @@ public class Client{
 
             // adiciona os portos e os endpoints às suas respetivas listas
             for (int i = 0; i < lines.size(); i++) {
-                this.rmiPortSM.add(Integer.parseInt(lines.get(i).split("/")[0]));
-                this.rmiEndpointSM.add(lines.get(i).split("/")[1]);
+                this.rmiHostSM.add(lines.get(i).split("/")[0]);
+                this.rmiPortSM.add(Integer.parseInt(lines.get(i).split("/")[1]));
+                this.rmiEndpointSM.add(lines.get(i).split("/")[2]);
             }
 
         } catch (NumberFormatException e){
-            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Porta invalida!");
+            System.out.println("Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Porta invalida!");
             return false;
         } catch (IndexOutOfBoundsException e){
-            log.error(toString(), "Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Um URL foi mal especificado!");
+            System.out.println("Ocorreu um erro ao ler o ficheiro de configuracao em '" + path + "'! Um URL foi mal especificado!");
             return false;
         }
 
         if (this.rmiPortSM.size() == 0){
-            log.error(toString(), "Configuracao deve especificar a porta do registo RMI do SearchModule, o endpoint do SearchModule no sesu próprio registo, a porta do registo RMI dos Barrels e os endpoints de cada Barrel um por linha");
+            System.out.println("Configuracao deve especificar a porta do registo RMI do SearchModule, o endpoint do SearchModule no seu próprio registo, a porta do registo RMI dos Barrels e os endpoints de cada Barrel um por linha");
             return false;
         }
 
-        
-        log.info(toString(), "Configuracao carregada!");
+        System.out.println("Configuracao carregada!");
         return true;
-        
     }
 
     /**
@@ -469,13 +460,7 @@ public class Client{
     
 
     public static void main(String[] args) {
-        
-        // tratamento de erros nos parametros
-        if (args.length == 0){
-            printUsage();
-            return;
-        }
-        
+        // tratamento de erros nos parametros        
         if (args.length != 1){
             printUsage();
             return;
@@ -488,34 +473,35 @@ public class Client{
             return;
         }
 
+        Scanner sc = new Scanner(System.in);
+
         int index = 0, valor = 0;
         while (true){
 
             if (index == client.rmiEndpointSM.size()) index = 0;
 
-            try{
+            try {
     
                 // ligar ao server registado no rmiEndpoint fornecido
-                searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(client.rmiPortSM.get(index)).lookup(client.rmiEndpointSM.get(index));
+                searchModuleIF = (SearchResponse) LocateRegistry.getRegistry(client.rmiHostSM.get(index), client.rmiPortSM.get(index)).lookup(client.rmiEndpointSM.get(index));
     
                 // menu da aplicação
-                valor = client.menu(searchModuleIF, valor);
+                valor = client.menu(sc, searchModuleIF, valor);
                 if(valor == -1){
-                    return;
+                    break;
                 }
 
             } catch (NotBoundException e) {
-                //System.out.println("Erro: não existe um servidor registado no endpoint '" + client.rmiEndpointSM.get(index) + "'!");
                 index ++;
             } catch (AccessException e) {
-                //System.out.println("Erro: Esta máquina não tem permissões para ligar ao endpoint '" + client.rmiEndpointSM.get(index) + "'!");
                 index ++;
             } catch (RemoteException e) {
-                //System.out.println("Erro: Não foi possível encontrar o registo");
                 index ++;
             }
     
         }
         
+        sc.close();
     }
+
 }

@@ -1,0 +1,129 @@
+.search_container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search_container h1 {
+    background: linear-gradient(to right, #07b8fe, #6878ff);
+    font-family: "Roboto";
+    font-size: 50px;
+    font-weight: bold;
+    text-align: center;
+
+
+    background: linear-gradient(to right, #07b8fe, #6878ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.container input[type=checkbox]{
+    transform: scale(2);
+    margin: 10px;
+}
+
+.search_container #query_input{
+    border-style: solid;
+    border-width: 2px;
+    width: 300px;
+    height: 30px;
+}
+
+.search_container input[type=submit]{
+    background: linear-gradient(to right, #07b8fe, #6878ff);
+    border: none;
+    color: white;
+    padding: 6px 16px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.search_container input[type=submit]:hover{
+    color: #a5a5a5;
+    transition: 0.3s;
+}
+
+
+.search-results-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    text-align: left;
+    z-index: 1;
+}
+
+.search-results-container a{
+    text-decoration: none;
+}
+
+.search-results-container ul{
+    list-style: none;
+    word-wrap: break-word;
+    width: 80%;
+}
+
+.search-results-container p{
+    font-family: "Roboto";
+    color: #000000;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.search-result{
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    height: fit-content;
+    width: fit-content;
+    margin-bottom: 10px;
+    border-bottom: #000000;
+    border-width: 2px;
+}
+
+.search-result h1{
+    font-family: "Roboto";
+    color: #0aa3e5;
+    font-size: 25px;
+    margin-bottom: 0;
+}
+
+.search-result p{
+    font-family: "Roboto";
+    color: #000000;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.page-select{
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.page-select a{
+    font-family: "Roboto";
+    color: #0aa3e5;
+    font-size: 24px;
+    margin: 30px;
+    text-decoration: none;
+
+}
+.page-select a:hover{
+    text-decoration: underline;
+    text-decoration-color: #0aa3e5;
+}
+

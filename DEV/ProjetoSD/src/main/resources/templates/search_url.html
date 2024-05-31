@@ -1,0 +1,91 @@
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="search_results.css">
+    <title>Googol</title>
+</head>
+<body>
+
+<script th:inline="javascript">
+    var popup = [[${popup}]];
+    if (popup) {
+        alert(popup);
+    }
+</script>
+
+<div class="search_container">
+
+    <div class="container">
+
+        <h1>Googol</h1>
+
+        <form action="/search_url" method="get">
+
+            <input type="text" name="palavra" id="query_input" th:value="${searched_url}">
+
+            <input type="submit" value="Pesquisar">
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<input type="checkbox" name="" id="openmenu">
+
+<div class="menu">
+
+    <label for="openmenu">
+        <div id="box">
+            <span class="bars"></span>
+            <span class="bars"></span>
+            <span class="bars"></span>
+        </div>
+    </label>
+
+    <a href="/"><h1>Googol</h1></a>
+
+    <div class="items">
+
+        <a href="/">Pesquisar</a>
+        <a href="/index_url">Indexar URL</a>
+        <a href="/search_url">Pesquisa URL</a>
+        <a href="/top_user">Top User</a>
+        <a href="/administration">Administração</a>
+        <a href="/login">Login</a>
+        <a href="/registo">Registo</a>
+        <a href="/logout">Logout</a>
+
+    </div>
+
+</div>
+
+
+<div class="search-results-container">
+
+    <ul th:if="${results.size() > 0}">
+
+        <li th:each="result, iStat : ${results}">
+
+            <div class="search-result">
+                <a th:href="${result.url}">
+                    <h1 th:text="${result.url}"></h1>
+                </a>
+            </div>
+
+        </li>
+
+    </ul>
+
+    <p th:unless="${results.size() > 0}">Não foram encontrados resultados</p>
+
+</div>
+
+
+</body>
+</html>

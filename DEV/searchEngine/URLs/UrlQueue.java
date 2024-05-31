@@ -72,17 +72,15 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
     }
 
 
-    public Url removeURL(String downloader, String endpoint, int porta) throws RemoteException {
+    public Url removeURL(String downloader, String endpoint, int porta, String ip) throws RemoteException {
         try {
-            System.out.println("a");
-            String str = "IP: /" + endpoint + ":" + porta;
-            System.out.println(str);
+            String str = "IP:" + ip + ":" + porta + "/" + endpoint;
             this.downloaders.add(str);
             this.numDownloaders ++;
             Url url = urls.take();
             this.numDownloaders --;
             this.downloaders.remove(str);
-            this.log.error(toString(), "Url removida da fila por " + downloader + ": " + url);
+            this.log.info(toString(), "Url removida da fila por " + downloader + ": " + url);
             return url;
             
         } catch (InterruptedException e) {
@@ -101,7 +99,7 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
         // tentar criar o registo
         try {
             registry = LocateRegistry.createRegistry(port);
-            System.out.println("Registo criado em 'localhost:" + port);
+            urlQueue.log.info(urlQueue.toString(), "Registo criado em 'localhost:" + port + "'");
         } catch (RemoteException re) {
             
             // caso não seja possível criar uma referência para o registo tentar localiza-lo
@@ -109,7 +107,7 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
                 registry = LocateRegistry.getRegistry(port);
             } catch (RemoteException e) {
 
-                System.out.println("Erro: Nao foi possivel criar o registo em 'localhost:" + port + "/" + endpoint + "'");
+                urlQueue.log.error(urlQueue.toString(), "Nao foi possivel criar o registo em 'localhost:" + port + "/" + endpoint + "'");
                 return false;
             }
         }
@@ -117,14 +115,14 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
         // tentar registar urlQueue no endpoint atribuido
         try {
             registry.bind(endpoint, urlQueue);
-            System.out.println("UrlQueue registado em 'localhost:" + port + "/" + endpoint + "'");
+            urlQueue.log.info(urlQueue.toString(), "UrlQueue registado em 'localhost:" + port + "/" + endpoint + "'");
 
         } catch (AlreadyBoundException e) {
-            System.out.println("Erro: 'localhost:" + port + "/" + endpoint + "' ja foi atribuido!");
+            urlQueue.log.error(urlQueue.toString(), "localhost:" + port + "/" + endpoint + "' ja foi atribuido!");
 
         } catch (RemoteException e) {
             e.printStackTrace();
-            System.out.println("Erro: Ocorreu um erro a registar a UrlQueue em 'localhost:" + port + "/" + endpoint + "'");
+            urlQueue.log.error(urlQueue.toString(), "Ocorreu um erro a registar a UrlQueue em 'localhost:" + port + "/" + endpoint + "'");
             return false;
         }
 
@@ -181,6 +179,5 @@ public class UrlQueue extends UnicastRemoteObject implements UrlQueueInterface {
         if (!register(rmiPort, rmiEndpoint, urlQueue)) {
             return;
         }
-
     }
 }

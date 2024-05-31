@@ -66,8 +66,6 @@ public class WordIndex {
         this.url = null;
     }
 
-    // receivedMessage.text() = [[type | url_list], [msgid | 1], [url | www.google.pt], [titulo | sadfasdfasdf], [texto | asd asd asd asd], [palavras | asdf,sadf,sadf,sadf],  [children mf | a,a,a,a,a,a]]
-
     @Override
     public String toString() {
 
@@ -108,5 +106,4 @@ public class WordIndex {
 
         return string;
     }
-    
 }

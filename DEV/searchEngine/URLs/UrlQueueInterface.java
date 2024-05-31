@@ -21,7 +21,7 @@ public interface UrlQueueInterface extends Remote {
      * @return Url eliminado da UrlQueue
      * @throws RemoteException caso ocorra um erro no RMI
      */
-    public Url removeURL(String downloader, String endpoint, int porta) throws RemoteException;
+    public Url removeURL(String downloader, String endpoint, int porta, String ip) throws RemoteException;
 
     /**
      * Verifica se a UrLQueue esta vazia
